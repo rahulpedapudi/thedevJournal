@@ -4,6 +4,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "../lib/auth";
 import { userRoutes } from "./modules/users/user.routes";
 import { projectRoutes } from "./modules/projects/project.routes";
+import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
 
 const PORT = 3000;
 
@@ -18,6 +19,7 @@ app.use(
   }),
 );
 
+
 // Better Auth route
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
@@ -28,6 +30,9 @@ app.use("/api/user", userRoutes);
 
 // project routes
 app.use("/api/project", projectRoutes);
+
+// devnote routes
+app.use("/api/devnote", devNoteRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({

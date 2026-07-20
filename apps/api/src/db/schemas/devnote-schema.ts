@@ -19,7 +19,7 @@ export const devNote = pgTable("dev_note", {
     onDelete: "set null",
   }),
 
-  title: text("title"),
+  title: text("title").default("Untitled"),
 
   rawContent: text("raw_content").notNull(),
 
@@ -49,5 +49,7 @@ export const devNote = pgTable("dev_note", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });

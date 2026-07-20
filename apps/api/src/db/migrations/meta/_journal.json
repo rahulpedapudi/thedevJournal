@@ -22,6 +22,13 @@
       "when": 1784305168696,
       "tag": "0002_tough_mysterio",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784566932679,
+      "tag": "0003_red_jack_flag",
+      "breakpoints": true
     }
   ]
 }
