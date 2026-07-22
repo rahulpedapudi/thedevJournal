@@ -14,17 +14,26 @@ import type {
 
 import { logger } from "../../../lib/logger";
 
+import { getProvider } from "../../../lib/ai/factory";
+
 export async function getDevNotes(req: Request, res: Response): Promise<void> {
+  const userId = req.user?.id as string;
   try {
-    const notes = await getUserDevNotes(req.user?.id as string);
+    const notes = await getUserDevNotes(userId);
+
+    logger.info(
+      { userId, count: notes?.length || 0 },
+      "Retrieved user devnotes",
+    );
 
     res.status(200).json({
-      success: "true",
+      success: true,
       data: notes,
     });
   } catch (error) {
+    logger.error({ error, userId }, "Failed to retrieve user devnotes");
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
@@ -34,25 +43,29 @@ export async function getDevNoteByID(
   req: Request<DevNoteParams>,
   res: Response,
 ): Promise<void> {
+  const devNoteId = req.params.id;
+  const userId = req.user!.id;
   try {
-    const devNoteId = req.params.id;
-    const userId = req.user!.id;
-
     const note = await getUserDevNote(userId, devNoteId);
 
     if (!note) {
+      logger.warn({ userId, devNoteId }, "Devnote not found");
       res.status(404).json({
         message: "Note not found",
       });
+      return;
     }
 
+    logger.info({ userId, devNoteId }, "Retrieved devnote by ID");
+
     res.status(200).json({
-      success: "true",
+      success: true,
       data: note,
     });
   } catch (error) {
+    logger.error({ error, userId, devNoteId }, "Failed to get devnote by ID");
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
@@ -62,19 +75,25 @@ export async function createDevNote(
   req: Request<{}, {}, CreateDevNoteBody>,
   res: Response,
 ) {
-  try {
-    const { title, rawContent } = req.body;
-    const userId = req.user!.id;
+  const { title, rawContent } = req.body;
+  const userId = req.user!.id;
 
+  try {
     const note = await createUserDevNote(userId, title, rawContent);
 
+    logger.info(
+      { userId, noteId: note?.[0]?.id, title },
+      "Created devnote successfully",
+    );
+
     res.status(201).json({
-      success: "true",
+      success: true,
       data: note,
     });
   } catch (error) {
+    logger.error({ error, userId, title }, "Failed to create devnote");
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
@@ -84,30 +103,32 @@ export async function patchDevNote(
   req: Request<DevNoteParams, {}, PatchNoteBody>,
   res: Response,
 ): Promise<void> {
+  const noteId = req.params.id;
+  const userId = req.user!.id;
+  const data = req.body;
+
   try {
-    const noteId = req.params.id;
-    const userId = req.user!.id;
-
-    const data = req.body;
-
     logger.info(
       {
         noteId: noteId,
         userId: userId,
-        body: data,
+        fieldsToUpdate: Object.keys(data),
       },
       "Patching note",
     );
 
     const note = await patchNote(userId, noteId, data);
 
+    logger.info({ noteId, userId }, "Patched note successfully");
+
     res.status(201).json({
-      success: "true",
+      success: true,
       data: note,
     });
   } catch (error) {
+    logger.error({ error, userId, noteId }, "Failed to patch note");
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
@@ -117,19 +138,22 @@ export async function deleteDevNote(
   req: Request<DevNoteParams>,
   res: Response,
 ): Promise<void> {
-  try {
-    const devNoteId = req.params.id;
-    const userId = req.user!.id;
+  const devNoteId = req.params.id;
+  const userId = req.user!.id;
 
+  try {
     await deleteNote(userId, devNoteId);
 
+    logger.info({ devNoteId, userId }, "Deleted note successfully");
+
     res.status(200).json({
-      success: "true",
+      success: true,
       message: "Note deleted successfully",
     });
   } catch (error) {
+    logger.error({ error, userId, devNoteId }, "Failed to delete note");
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
@@ -139,13 +163,14 @@ export async function polishDevNote(
   req: Request<DevNoteParams>,
   res: Response,
 ): Promise<void> {
-  try {
-    const devNoteId = req.params.id;
-    const userId = req.user!.id;
+  const devNoteId = req.params.id;
+  const userId = req.user!.id;
 
+  try {
     // Fetch the note
     const note = await getUserDevNote(userId, devNoteId);
     if (!note) {
+      logger.warn({ userId, devNoteId }, "Devnote not found for polishing");
       res.status(404).json({
         message: "Note not found",
       });
@@ -155,11 +180,28 @@ export async function polishDevNote(
     // Set status to processing
     await patchNote(userId, devNoteId, { aiStatus: "processing" });
 
+    logger.info(
+      {
+        noteId: devNoteId,
+        userId: userId,
+      },
+      "Generating polished content",
+    );
+
     // Generate polished content
-    const enrichedContent = generatePolishedContent(
+    const enrichedContent = await generatePolishedContent(
       note.noteType || "note",
       note.title || "Untitled",
-      note.rawContent || ""
+      note.rawContent || "",
+    );
+
+    logger.info(
+      {
+        noteId: devNoteId,
+        userId: userId,
+        contentLength: enrichedContent.length,
+      },
+      "Generated polished content.. Saving note",
     );
 
     // Save notes
@@ -169,147 +211,56 @@ export async function polishDevNote(
     });
 
     res.status(200).json({
-      success: "true",
+      success: true,
       data: updated[0],
     });
   } catch (error) {
+    logger.error({ error, userId, devNoteId }, "Failed to polish devnote");
+
+    // Attempt to set status to failed
+    try {
+      await patchNote(userId, devNoteId, { aiStatus: "failed" });
+    } catch (patchErr) {
+      logger.error(
+        { patchErr, userId, devNoteId },
+        "Failed to mark note as failed after polish error",
+      );
+    }
+
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Internal Server Error",
     });
   }
 }
 
-function generatePolishedContent(noteType: string, title: string, rawContent: string): string {
+async function generatePolishedContent(
+  noteType: string,
+  title: string,
+  rawContent: string,
+): Promise<string> {
   const dateStr = new Date().toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
-  let sections = "";
-  if (noteType === "problem") {
-    sections = `
-### ⚠️ Core Issue
-${rawContent || "No description provided."}
+  logger.info(
+    {
+      noteType: noteType,
+      title: title,
+    },
+    "Generating polished content prompt",
+  );
 
-### 🔍 Impact & Scope
-- **Severity:** High / Active Blocker
-- **Symptoms:** Unexpected application crashes, broken client-server handshake, or state mismatch.
-- **Affected Components:** Core application modules.
+  const client = getProvider();
 
-### 🛠️ Investigation Checklist
-1. Verify network request payloads and response codes.
-2. Cross-reference local logs with backend middleware trace.
-3. Check database locks or constraint violations.
-`;
-  } else if (noteType === "learning") {
-    sections = `
-### 💡 Core Concept
-${rawContent || "No details provided."}
+  const content = await client.complete([
+    {
+      content: `You are a professional developer and technical writer. Please polish the following ${noteType} titled "${title}" written on ${dateStr}. Ensure that the content is clear, concise, and well-structured. Here is the content:\n\n${rawContent}`,
+      role: "user",
+    },
+  ]);
 
-### 🧠 Key Takeaways
-- Understand the underlying mechanics thoroughly before abstracting.
-- Keep simple solutions first; optimize only when patterns emerge.
-- Document gotchas early to prevent regression.
-
-### 📝 Next Action Items
-1. Apply the new learning to refactor existing legacy logic.
-2. Share findings with the team during the next sync.
-`;
-  } else if (noteType === "solution") {
-    sections = `
-### ✅ Resolving Approach
-${rawContent || "No details provided."}
-
-### 🔧 Code & Schema Changes
-- Implemented robust type definitions.
-- Adjusted middleware exception boundaries.
-- Cleaned up dangling socket/database listeners.
-
-### 📈 Results
-- System stabilization achieved.
-- Error rate reduced to zero.
-- Re-run passes verification checklist.
-`;
-  } else if (noteType === "idea") {
-    sections = `
-### ⚡ Pitch / Concept
-${rawContent || "No details provided."}
-
-### 🎯 Value Proposition
-- Unblocks developer workflows.
-- Reduces boilerplate and speeds up features.
-- Simplifies architecture.
-
-### 📌 Feasibility & Complexity
-- **Effort:** Small (1-2 days)
-- **Dependencies:** None
-`;
-  } else if (noteType === "decision") {
-    sections = `
-### ⚖️ Final Decision
-${rawContent || "No details provided."}
-
-### 🔄 Alternatives Considered
-1. Do nothing (rejected due to accumulation of tech debt).
-2. Complete rewrite (rejected due to timeline constraints).
-
-### 🚀 Implementation Strategy
-- Step 1: Write type safety wrappers.
-- Step 2: Swap the implementation in-place.
-- Step 3: Run comprehensive regression suite.
-`;
-  } else if (noteType === "experiment") {
-    sections = `
-### 🧪 Hypothesis
-${rawContent || "No details provided."}
-
-### 📊 Observations
-- Metric changes were minimal but stable.
-- Developer experience was slightly improved.
-
-### 🏁 Conclusion
-- Approved for gradual rollout.
-`;
-  } else if (noteType === "question") {
-    sections = `
-### ❓ Open Question
-${rawContent || "No details provided."}
-
-### 🕵️ Possible Answers / Leads
-- Read the official documentation or API specifications.
-- Check community threads or open source issues on GitHub.
-`;
-  } else if (noteType === "progress") {
-    sections = `
-### 📈 Status Report
-${rawContent || "No details provided."}
-
-### 🏁 Milestones Reached
-- [x] Baseline setup configured.
-- [x] Initial verification runs completed.
-- [ ] Final polishing and production deploy.
-`;
-  } else {
-    sections = `
-### 📝 Overview
-${rawContent || "No details provided."}
-
-### 🔍 Detailed Analysis
-- Summary of observations and code findings.
-- Recommendations for clean-up and code quality.
-`;
-  }
-
-  return `
-# ${title || "Untitled Note"}
-*Polished by Assistant on ${dateStr} • Type: ${noteType.toUpperCase()}*
-
-${sections}
-
----
-*This document was automatically compiled and polished from raw developer scratchpad entry logs.*
-`.trim();
+  return content;
 }
-

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db } from "../../db/db";
-import { project } from "../../db/schemas/project-schema";
+import { db } from "../../../db/db";
+import { project } from "../../../db/schemas/project-schema";
 
 type CreateProjectInput = {
   userId: string;

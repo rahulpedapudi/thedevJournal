@@ -3,12 +3,17 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "../lib/auth";
 import { userRoutes } from "./modules/users/user.routes";
-import { projectRoutes } from "./modules/projects/project.routes";
+import { projectRoutes } from "./modules/devnotes/projects/project.routes";
 import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
+import { httpLogger } from "./middleware/logger-middleware";
+import { errorHandler } from "./middleware/error-handler";
+import { logger } from "../lib/logger";
 
 const PORT = 3000;
 
 const app = express();
+
+app.use(httpLogger);
 
 app.use(
   cors({
@@ -18,7 +23,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   }),
 );
-
 
 // Better Auth route
 app.all("/api/auth/*splat", toNodeHandler(auth));
@@ -40,6 +44,8 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.use(errorHandler);
+
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
+  logger.info(`API running on http://localhost:${PORT}`);
 });
