@@ -44,21 +44,28 @@ export function ProjectList({
   };
 
   return (
-    <div className="sidebar-nav-group">
-      <div className="sidebar-section-title">Projects</div>
-      <ul className="sidebar-nav-list">
+    <div className="mb-6">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary pl-2 mb-2">Projects</div>
+      <ul className="list-none p-0 m-0 flex flex-col gap-0.5">
         {/* All Notes */}
         <li
           onClick={() => {
             navigate(activeNoteId ? `/notes/${activeNoteId}` : "/");
             onProjectClick?.();
           }}
-          className={`sidebar-link ${!activeProjectId ? "active" : ""}`}>
-          <div className="flex-align-center">
-            <BookOpen size={14} />
-            <span className="sidebar-link-text">All Notes</span>
+          className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
+            !activeProjectId
+              ? "text-text-primary border-l-accent bg-black/5"
+              : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+          }`}
+        >
+          <div className="flex items-center gap-2 overflow-hidden">
+            <BookOpen size={14} className="shrink-0" />
+            <span className="truncate text-xs">All Notes</span>
           </div>
-          <span className="sidebar-link-badge">{notes.length}</span>
+          <span className="text-[10px] bg-border-subtle text-text-secondary px-1.5 py-0.5 rounded">
+            {notes.length}
+          </span>
         </li>
 
         {/* Per-project entries */}
@@ -76,36 +83,42 @@ export function ProjectList({
                 );
                 onProjectClick?.();
               }}
-              className={`sidebar-link ${isActive ? "active" : ""}`}>
-              <div className="flex-align-center">
-                <Folder size={14} />
-                <span className="sidebar-link-text">{proj.name}</span>
+              className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
+                isActive
+                  ? "text-text-primary border-l-accent bg-black/5"
+                  : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+              }`}
+            >
+              <div className="flex items-center gap-2 overflow-hidden">
+                <Folder size={14} className="shrink-0" />
+                <span className="truncate text-xs">{proj.name}</span>
               </div>
-              <span className="sidebar-link-badge">{count}</span>
+              <span className="text-[10px] bg-border-subtle text-text-secondary px-1.5 py-0.5 rounded">
+                {count}
+              </span>
             </li>
           );
         })}
       </ul>
 
       {/* Inline new-project form */}
-      <div style={{ padding: "8px" }}>
+      <div className="p-2">
         {isCreating ? (
-          <form onSubmit={handleCreate} className="flex-align-center">
+          <form onSubmit={handleCreate} className="flex items-center gap-2">
             <input
               type="text"
-              className="text-input"
+              className="w-full h-7 text-xs px-2.5 bg-bg-surface border border-border-subtle rounded-md text-text-primary outline-none focus:border-text-primary"
               placeholder="Project name..."
               autoFocus
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              style={{ height: "26px", fontSize: "12px", padding: "4px 8px" }}
             />
           </form>
         ) : (
           <button
             onClick={() => setIsCreating(true)}
-            className="toggle-tab ui-meta"
-            style={{ padding: 0, color: "var(--text-secondary)" }}>
+            className="text-xs font-medium text-text-secondary hover:text-text-primary cursor-pointer border-none bg-transparent p-0 transition-colors"
+          >
             + Create Project
           </button>
         )}

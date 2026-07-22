@@ -12,11 +12,10 @@ interface NoteListProps {
   onNoteClick?: () => void;
 }
 
-/** Returns the CSS class for the AI-status chip. */
-function resolveChipClass(note: DevNote): string {
-  if (note.aiStatus === "processing") return "pending";
-  if (note.aiStatus === "completed" && note.enrichedContent) return "completed";
-  return "draft";
+function resolveChipStyle(note: DevNote): string {
+  if (note.aiStatus === "processing") return "bg-status-pending-bg text-status-pending-text";
+  if (note.aiStatus === "completed" && note.enrichedContent) return "bg-status-completed-bg text-status-completed-text";
+  return "bg-status-draft-bg text-status-draft-text";
 }
 
 /**
@@ -38,31 +37,24 @@ export function NoteList({
     : "Recent Notes";
 
   return (
-    <div
-      className="sidebar-nav-group"
-      style={{ overflowY: "auto", maxHeight: "300px" }}
-    >
-      <div className="sidebar-section-title">{sectionTitle}</div>
+    <div className="mb-6 overflow-y-auto max-h-75">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary pl-2 mb-2">
+        {sectionTitle}
+      </div>
 
       {isLoading ? (
-        <div style={{ padding: "8px", color: "var(--text-secondary)" }}>
+        <div className="p-2 text-text-secondary text-xs">
           <LoadingSpinner />
         </div>
       ) : notes.length === 0 ? (
-        <div
-          style={{
-            padding: "8px",
-            color: "var(--text-secondary)",
-            fontSize: "12px",
-          }}
-        >
+        <div className="p-2 text-text-secondary text-xs">
           No notes found.
         </div>
       ) : (
-        <ul className="sidebar-nav-list">
+        <ul className="list-none p-0 m-0 flex flex-col gap-0.5">
           {notes.map((n) => {
             const isActive = activeNoteId === n.id;
-            const chipClass = resolveChipClass(n);
+            const chipStyle = resolveChipStyle(n);
             return (
               <li
                 key={n.id}
@@ -74,39 +66,29 @@ export function NoteList({
                   );
                   onNoteClick?.();
                 }}
-                className={`sidebar-link ${isActive ? "active" : ""}`}
-                style={{ padding: "8px 10px" }}
+                className={`flex items-center justify-between p-2 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
+                  isActive
+                    ? "text-text-primary border-l-accent bg-black/5"
+                    : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+                }`}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "3px",
-                    width: "100%",
-                    overflow: "hidden",
-                  }}
-                >
+                <div className="flex flex-col gap-0.5 w-full overflow-hidden">
                   <span
-                    className="sidebar-link-text"
-                    style={{
-                      fontWeight: isActive ? 500 : 400,
-                      color: isActive
-                        ? "var(--text-primary)"
-                        : "var(--text-secondary)",
-                    }}
+                    className={`truncate text-xs ${
+                      isActive ? "font-medium text-text-primary" : "font-normal text-text-secondary"
+                    }`}
                   >
                     {n.title || "Untitled Note"}
                   </span>
-                  <div className="flex-between">
-                    <span style={{ fontSize: "10px", color: "#888" }}>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] text-[#888]">
                       {new Date(n.createdAt).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                       })}
                     </span>
                     <span
-                      className={`status-chip ${chipClass}`}
-                      style={{ fontSize: "9px", padding: "1px 5px" }}
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium leading-none ${chipStyle}`}
                     >
                       {n.aiStatus === "completed" && n.enrichedContent
                         ? "polished"

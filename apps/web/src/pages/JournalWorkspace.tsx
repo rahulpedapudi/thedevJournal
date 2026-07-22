@@ -12,25 +12,15 @@ import {
   useDeleteNote,
   usePolishNote,
 } from "../hooks/useNotes";
-import { useProjects } from "../hooks/useProjects";
+import { useProjects, useCreateProject } from "../hooks/useProjects";
 import { Sidebar } from "../components/sidebar/Sidebar";
 import { NoteEditor } from "../components/editor/NoteEditor";
-import { EmptyState } from "../components/editor/EmptyState";
+import { DriveDashboard } from "../components/dashboard/DriveDashboard";
+// import { MobileBottomBar } from "../components/mobile/MobileBottomBar";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 
 /**
- * JournalWorkspace — the main two-panel page.
- *
- * Data flow:
- *  1. URL params (noteId, projectId) drive which note is "active".
- *  2. Server state lives in React Query (useNotes, useActiveNote, useProjects).
- *  3. Local editor state (title, content) mirrors the active note and is the
- *     source of truth while the user types.
- *  4. A debounced effect auto-saves local state to the server after 1 s of
- *     inactivity.  `isTypingRef` prevents the server response from
- *     overwriting in-flight edits.
- *  5. Dropdown changes (type, project) bypass the debounce and save
- *     immediately via `useUpdateNote`.
+ * JournalWorkspace — the main full-stack workspace page.
  */
 export function JournalWorkspace() {
   const navigate = useNavigate();
@@ -48,6 +38,7 @@ export function JournalWorkspace() {
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const createNote = useCreateNote();
+  const createProject = useCreateProject();
   const updateNote = useUpdateNote(noteId);
   const deleteNote = useDeleteNote();
   const polishNote = usePolishNote(noteId);
@@ -60,7 +51,7 @@ export function JournalWorkspace() {
   const [localRawContent, setLocalRawContent] = useState("");
   const [localNoteType, setLocalNoteType] = useState<string>("note");
   const [localProjectId, setLocalProjectId] = useState("");
-  const [aiView, setAiView] = useState<"raw" | "polished">("raw");
+  const [aiView, setAiView] = useState<"notion" | "raw" | "polished">("notion");
 
   // Tracks whether the user is actively typing to prevent server responses
   // from clobbering in-flight edits.
@@ -80,13 +71,15 @@ export function JournalWorkspace() {
       }
       setLocalNoteType(activeNote.noteType ?? "note");
       setLocalProjectId(activeNote.projectId ?? "");
-      setAiView(activeNote.enrichedContent ? "polished" : "raw");
+      if (aiView === "polished" && !activeNote.enrichedContent) {
+        setAiView("notion");
+      }
     } else if (!noteId) {
       setLocalTitle("");
       setLocalRawContent("");
       setLocalNoteType("note");
       setLocalProjectId("");
-      setAiView("raw");
+      setAiView("notion");
     }
   }, [noteId, activeNote]);
 
@@ -168,31 +161,39 @@ export function JournalWorkspace() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="app-layout">
+    <div className="flex w-full min-h-screen bg-bg-primary">
       {/* Mobile Top Header */}
-      <header className="mobile-header">
+      <header className="flex md:hidden fixed top-0 left-0 right-0 h-14 bg-bg-surface border-b border-border-subtle items-center justify-between px-4 z-1000 shadow-xs">
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="btn btn-ghost"
-          style={{ padding: "6px", height: "32px", width: "32px", border: "none" }}
+          className="p-1.5 h-9 w-9 inline-flex items-center justify-center rounded-lg text-text-primary hover:bg-black/5 border-none cursor-pointer"
           aria-label="Open Sidebar"
         >
-          <Menu size={18} />
+          <Menu size={20} />
         </button>
-        <span className="mobile-header-title">
+
+        <span
+          onClick={() => navigate("/")}
+          className="text-sm font-bold tracking-tight text-text-primary cursor-pointer"
+        >
           {projectId
             ? (projects.find((p) => p.id === projectId)?.name || "Project")
             : "thedevjournal"}
         </span>
+
         <button
           onClick={handleNewNote}
-          className="btn btn-ghost"
-          style={{ padding: "6px", height: "32px", width: "32px", border: "none" }}
+          className="p-1.5 h-9 w-9 inline-flex items-center justify-center rounded-lg bg-text-primary text-bg-surface hover:bg-[#282827] border-none cursor-pointer shadow-xs disabled:opacity-50"
           disabled={createNote.isPending}
           aria-label="New Note"
         >
           {createNote.isPending ? (
-            <LoadingSpinner />
+            <LoadingSpinner
+              style={{
+                borderColor: "rgba(255,255,255,0.2)",
+                borderLeftColor: "#fff",
+              }}
+            />
           ) : (
             <Plus size={18} />
           )}
@@ -202,7 +203,7 @@ export function JournalWorkspace() {
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div
-          className="sidebar-backdrop"
+          className="fixed md:hidden inset-0 bg-primary/40 backdrop-blur-[2px] z-1005 animate-in fade-in duration-150"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -220,12 +221,22 @@ export function JournalWorkspace() {
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="content-area dots-grid-bg">
-        <div className="content-inner">
+      <main className="flex-1 flex justify-center p-4 pt-20 pb-20 md:p-8 md:pt-8 md:pb-8 overflow-y-auto h-screen bg-[radial-gradient(var(--color-border-subtle)_1px,transparent_1px)] bg-size-[16px_16px]">
+        <div className={`w-full flex flex-col ${!noteId ? "max-w-260" : "max-w-200"}`}>
           {!noteId ? (
-            <EmptyState onCreateNote={handleNewNote} />
+            <DriveDashboard
+              notes={notes}
+              projects={projects}
+              notesLoading={notesLoading}
+              activeProjectId={projectId}
+              onCreateNote={handleNewNote}
+              onCreateProject={(name) => createProject.mutate(name)}
+              onDeleteNote={(id) => deleteNote.mutate(id)}
+              onPolishNote={(id) => polishNote.mutate(id)}
+              isCreatingNote={createNote.isPending}
+            />
           ) : loadingActiveNote || !activeNote ? (
-            <div style={{ display: "flex", justifyContent: "center", padding: "64px" }}>
+            <div className="flex justify-center p-16">
               <LoadingSpinner />
             </div>
           ) : (
@@ -250,6 +261,14 @@ export function JournalWorkspace() {
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation Bar & FAB */}
+      {/* <MobileBottomBar
+        onNewNote={handleNewNote}
+        isCreatingNote={createNote.isPending}
+        onOpenSidebar={() => setIsSidebarOpen(true)}
+        onSignOut={handleSignOut}
+      /> */}
     </div>
   );
 }

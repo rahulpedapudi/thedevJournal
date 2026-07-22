@@ -9,18 +9,10 @@ interface LoadingSpinnerProps {
 export function LoadingSpinner({ fullScreen, style }: LoadingSpinnerProps) {
   if (fullScreen) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          width: "100%",
-          height: "100vh",
-        }}
-      >
-        <Loader2 className="loading-spinner" style={style} />
+      <div className="flex justify-center items-center w-full h-screen">
+        <Loader2 className="animate-spin text-text-primary h-4 w-4 shrink-0" style={style} />
       </div>
     );
   }
-  return <Loader2 className="loading-spinner" style={style} />;
+  return <Loader2 className="animate-spin text-text-primary h-4 w-4 shrink-0" style={style} />;
 }

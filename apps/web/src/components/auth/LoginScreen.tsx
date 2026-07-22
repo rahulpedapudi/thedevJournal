@@ -65,29 +65,40 @@ export function LoginScreen({ mode }: LoginScreenProps) {
   };
 
   return (
-    <div className="login-container">
+    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-bg-surface">
       {/* Form Side */}
-      <div className="login-form-side">
-        <div className="login-form-wrapper">
-          <div className="login-header">
-            <h1>thedevjournal</h1>
-            <p>
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-bg-surface">
+        <div className="w-full max-w-[320px]">
+          <div className="mb-8">
+            <h1 className="text-xl font-medium tracking-tight mb-2 text-text-primary">
+              thedevjournal
+            </h1>
+            <p className="text-text-secondary text-xs">
               {mode === "signin"
                 ? "Enter your credentials to continue"
                 : "Create an account to begin journaling"}
             </p>
           </div>
 
-          {errorMsg && <div className="alert alert-error">{errorMsg}</div>}
+          {errorMsg && (
+            <div className="p-2.5 px-3.5 rounded-md text-xs mb-4 border bg-red-50 border-red-200 text-red-600">
+              {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             {mode === "signup" && (
-              <div className="form-group">
-                <label htmlFor="name">Name</label>
+              <div className="flex flex-col gap-1.5 mb-4">
+                <label
+                  htmlFor="name"
+                  className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+                >
+                  Name
+                </label>
                 <input
                   type="text"
                   id="name"
-                  className="text-input"
+                  className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
                   placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -96,12 +107,17 @@ export function LoginScreen({ mode }: LoginScreenProps) {
               </div>
             )}
 
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
+            <div className="flex flex-col gap-1.5 mb-4">
+              <label
+                htmlFor="email"
+                className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+              >
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
-                className="text-input"
+                className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -109,12 +125,17 @@ export function LoginScreen({ mode }: LoginScreenProps) {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
+            <div className="flex flex-col gap-1.5 mb-4">
+              <label
+                htmlFor="password"
+                className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+              >
+                Password
+              </label>
               <input
                 type="password"
                 id="password"
-                className="text-input"
+                className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -124,8 +145,7 @@ export function LoginScreen({ mode }: LoginScreenProps) {
 
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: "100%", marginTop: "8px" }}
+              className="w-full h-8.5 mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:bg-[#282827] disabled:opacity-50 transition-all cursor-pointer"
               disabled={loading}
             >
               {loading ? (
@@ -144,19 +164,12 @@ export function LoginScreen({ mode }: LoginScreenProps) {
             </button>
           </form>
 
-          <p
-            style={{
-              fontSize: "13px",
-              color: "var(--text-secondary)",
-              marginTop: "24px",
-              textAlign: "center",
-            }}
-          >
+          <p className="text-xs text-text-secondary mt-6 text-center">
             {mode === "signin" ? (
               <>
                 Don&apos;t have an account?{" "}
                 <span
-                  style={{ color: "var(--accent)", cursor: "pointer" }}
+                  className="text-accent cursor-pointer hover:underline"
                   onClick={() => navigate("/signup")}
                 >
                   Sign Up
@@ -166,7 +179,7 @@ export function LoginScreen({ mode }: LoginScreenProps) {
               <>
                 Already have an account?{" "}
                 <span
-                  style={{ color: "var(--accent)", cursor: "pointer" }}
+                  className="text-accent cursor-pointer hover:underline"
                   onClick={() => navigate("/login")}
                 >
                   Sign In
@@ -178,9 +191,9 @@ export function LoginScreen({ mode }: LoginScreenProps) {
       </div>
 
       {/* Retro Dithered Art Side */}
-      <div className="login-art-side">
-        <div className="dithered-pattern"></div>
-        <pre className="ascii-art">
+      <div className="hidden lg:flex flex-[1.2] bg-[#111110] items-center justify-center relative overflow-hidden border-l border-border-subtle">
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-size-[8px_8px]"></div>
+        <pre className="font-mono text-[10px] leading-tight text-[#888887] whitespace-pre select-none text-left z-10">
 {`+-------------------------------------------------------------+
 |                                                             |
 |   .---.                                                     |
