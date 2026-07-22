@@ -1,5 +1,4 @@
-export const API_BASE = "http://localhost:3000";
-
+export const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 /**
  * Thin wrapper around fetch that:
  * - Prepends API_BASE to every path
