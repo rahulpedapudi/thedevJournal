@@ -17,7 +17,11 @@ app.use(httpLogger);
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://thedevjournal.onrender.com",
+      "https://the-dev-journal-five.vercel.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
@@ -44,8 +48,12 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.head("/health", (_req, res) => {
+  res.status(200).send();
+});
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  logger.info(`API running on http://localhost:${PORT}`);
+  logger.info(`API running`);
 });

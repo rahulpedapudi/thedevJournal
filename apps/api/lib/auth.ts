@@ -10,5 +10,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  trustedOrigins: ["http://localhost:5173"],
+  trustedOrigins: [
+    "http://localhost:5173",
+    "https://thedevjournal.onrender.com",
+    "https://the-dev-journal-five.vercel.app",
+  ],
 });
