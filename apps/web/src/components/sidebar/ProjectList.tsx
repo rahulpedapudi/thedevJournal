@@ -9,7 +9,6 @@ interface ProjectListProps {
   projects: Project[];
   notes: DevNote[];
   activeProjectId?: string;
-  activeNoteId?: string;
   onProjectClick?: () => void;
 }
 
@@ -23,7 +22,6 @@ export function ProjectList({
   projects,
   notes,
   activeProjectId,
-  activeNoteId,
   onProjectClick,
 }: ProjectListProps) {
   const navigate = useNavigate();
@@ -50,13 +48,13 @@ export function ProjectList({
         {/* All Notes */}
         <li
           onClick={() => {
-            navigate(activeNoteId ? `/notes/${activeNoteId}` : "/");
+            navigate("/");
             onProjectClick?.();
           }}
           className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
             !activeProjectId
-              ? "text-text-primary border-l-accent bg-black/5"
-              : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+              ? "text-text-primary border-l-accent bg-text-primary/5"
+              : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-text-primary/5"
           }`}
         >
           <div className="flex items-center gap-2 overflow-hidden">
@@ -76,17 +74,13 @@ export function ProjectList({
             <li
               key={proj.id}
               onClick={() => {
-                navigate(
-                  isActive
-                    ? "/"
-                    : `/projects/${proj.id}${activeNoteId ? `/notes/${activeNoteId}` : ""}`,
-                );
+                navigate(`/projects/${proj.id}`);
                 onProjectClick?.();
               }}
               className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
                 isActive
-                  ? "text-text-primary border-l-accent bg-black/5"
-                  : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+                  ? "text-text-primary border-l-accent bg-text-primary/5"
+                  : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-text-primary/5"
               }`}
             >
               <div className="flex items-center gap-2 overflow-hidden">

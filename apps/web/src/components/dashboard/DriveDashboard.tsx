@@ -132,7 +132,7 @@ export function DriveDashboard({
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowNewProjectModal(true)}
-            className="h-9 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium bg-bg-surface text-text-primary border border-border-subtle hover:bg-black/5 transition-all cursor-pointer"
+            className="h-9 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium bg-bg-surface text-text-primary border border-border-subtle hover:bg-text-primary/5 transition-all cursor-pointer"
           >
             <FolderPlus size={15} />
             <span>New Project</span>
@@ -140,7 +140,7 @@ export function DriveDashboard({
           <button
             onClick={onCreateNote}
             disabled={isCreatingNote}
-            className="h-9 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold bg-text-primary text-bg-surface hover:bg-[#282827] shadow-sm disabled:opacity-50 transition-all cursor-pointer"
+            className="h-9 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold bg-text-primary text-bg-surface hover:opacity-90 shadow-sm disabled:opacity-50 transition-all cursor-pointer"
           >
             {isCreatingNote ? (
               <LoadingSpinner
@@ -446,7 +446,7 @@ export function DriveDashboard({
                               : `/notes/${note.id}`
                           )
                         }
-                        className="hover:bg-black/2 cursor-pointer transition-colors"
+                        className="hover:bg-text-primary/5 cursor-pointer transition-colors"
                       >
                         <td className="py-3 px-4 font-medium text-text-primary">
                           <div className="flex items-center gap-2 max-w-60">
@@ -499,7 +499,7 @@ export function DriveDashboard({
                                 onDeleteNote(note.id);
                               }
                             }}
-                            className="p-1 text-text-secondary hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                            className="p-1 text-text-secondary hover:text-red-500 rounded hover:bg-red-500/10 transition-colors"
                             title="Delete note"
                           >
                             <Trash2 size={14} />
@@ -517,7 +517,7 @@ export function DriveDashboard({
 
       {/* ── New Project Modal ──────────────────────────────────────────────── */}
       {showNewProjectModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-2000 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-2000 flex items-center justify-center p-4">
           <div className="bg-bg-surface border border-border-subtle rounded-2xl p-6 w-full max-w-md shadow-elevated animate-in fade-in zoom-in duration-150">
             <h3 className="text-base font-bold text-text-primary mb-1">
               Create New Project Folder
@@ -539,13 +539,13 @@ export function DriveDashboard({
                 <button
                   type="button"
                   onClick={() => setShowNewProjectModal(false)}
-                  className="h-9 px-4 rounded-lg text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-black/5 cursor-pointer"
+                  className="h-9 px-4 rounded-lg text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-text-primary/5 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="h-9 px-4 rounded-lg text-xs font-semibold bg-text-primary text-bg-surface hover:bg-[#282827] cursor-pointer"
+                  className="h-9 px-4 rounded-lg text-xs font-semibold bg-text-primary text-bg-surface hover:opacity-90 cursor-pointer"
                 >
                   Create Project
                 </button>

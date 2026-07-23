@@ -68,8 +68,8 @@ export function NoteList({
                 }}
                 className={`flex items-center justify-between p-2 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
                   isActive
-                    ? "text-text-primary border-l-accent bg-black/5"
-                    : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-black/2"
+                    ? "text-text-primary border-l-accent bg-text-primary/5"
+                    : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-text-primary/5"
                 }`}
               >
                 <div className="flex flex-col gap-0.5 w-full overflow-hidden">
@@ -81,7 +81,7 @@ export function NoteList({
                     {n.title || "Untitled Note"}
                   </span>
                   <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] text-[#888]">
+                    <span className="text-[10px] text-text-secondary opacity-70">
                       {new Date(n.createdAt).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",

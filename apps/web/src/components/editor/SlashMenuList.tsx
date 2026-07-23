@@ -225,7 +225,7 @@ export const SlashMenuList = forwardRef<SlashMenuListHandler, SlashMenuListProps
                   className={`flex items-center justify-center w-7 h-7 rounded-md border text-text-primary shrink-0 transition-colors ${
                     isSelected
                       ? "bg-text-primary text-bg-surface border-text-primary"
-                      : "bg-black/3 border-border-subtle"
+                      : "bg-text-primary/5 border-border-subtle"
                   }`}
                 >
                   <Icon size={16} />

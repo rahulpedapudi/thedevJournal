@@ -203,14 +203,15 @@ export function JournalWorkspace() {
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed md:hidden inset-0 bg-primary/40 backdrop-blur-[2px] z-1005 animate-in fade-in duration-150"
+          className="fixed md:hidden inset-0 bg-black/50 backdrop-blur-[2px] z-1005 animate-in fade-in duration-150"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       <Sidebar
         projects={projects}
-        notes={filteredNotes}
+        notes={notes}
+        filteredNotes={filteredNotes}
         notesLoading={notesLoading}
         activeProjectId={projectId}
         activeNoteId={noteId}

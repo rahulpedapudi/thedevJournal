@@ -93,7 +93,7 @@ export function NoteEditor({
             <button
               type="button"
               onClick={onPolish}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:bg-[#282827] disabled:opacity-50 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
               disabled={isProcessing || !localRawContent.trim()}
             >
               {isProcessing ? (
@@ -118,7 +118,7 @@ export function NoteEditor({
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-600 border border-border-subtle hover:bg-red-50 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-500 border border-border-subtle hover:bg-red-500/10 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
               disabled={isDeleting}
             >
               <Trash2 size={14} />
@@ -140,7 +140,7 @@ export function NoteEditor({
             <button
               type="button"
               onClick={onPolish}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:bg-[#282827] disabled:opacity-50 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
               disabled={isProcessing || !localRawContent.trim()}
             >
               {isProcessing ? (
@@ -165,7 +165,7 @@ export function NoteEditor({
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-600 border border-border-subtle hover:bg-red-50 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-500 border border-border-subtle hover:bg-red-500/10 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
               disabled={isDeleting}
             >
               <Trash2 size={14} />

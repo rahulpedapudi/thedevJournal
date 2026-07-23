@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sun, Moon } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
+import { useTheme } from "../../hooks/useTheme";
 import { LoadingSpinner } from "../LoadingSpinner";
 
 interface LoginScreenProps {
@@ -15,6 +16,7 @@ interface LoginScreenProps {
 export function LoginScreen({ mode }: LoginScreenProps) {
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
+  const { resolvedTheme, toggleTheme } = useTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,7 +69,20 @@ export function LoginScreen({ mode }: LoginScreenProps) {
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen bg-bg-surface">
       {/* Form Side */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-bg-surface">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-bg-surface relative">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="absolute top-6 right-6 p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-text-primary/5 transition-colors cursor-pointer"
+          title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+        >
+          {resolvedTheme === "dark" ? (
+            <Sun size={18} className="text-amber-400" />
+          ) : (
+            <Moon size={18} />
+          )}
+        </button>
+
         <div className="w-full max-w-[320px]">
           <div className="mb-8">
             <h1 className="text-xl font-medium tracking-tight mb-2 text-text-primary">
@@ -81,7 +96,7 @@ export function LoginScreen({ mode }: LoginScreenProps) {
           </div>
 
           {errorMsg && (
-            <div className="p-2.5 px-3.5 rounded-md text-xs mb-4 border bg-red-50 border-red-200 text-red-600">
+            <div className="p-2.5 px-3.5 rounded-md text-xs mb-4 border bg-red-500/10 border-red-500/20 text-red-500">
               {errorMsg}
             </div>
           )}
@@ -145,7 +160,7 @@ export function LoginScreen({ mode }: LoginScreenProps) {
 
             <button
               type="submit"
-              className="w-full h-8.5 mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:bg-[#282827] disabled:opacity-50 transition-all cursor-pointer"
+              className="w-full h-8.5 mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
               disabled={loading}
             >
               {loading ? (

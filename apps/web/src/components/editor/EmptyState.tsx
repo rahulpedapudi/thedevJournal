@@ -22,7 +22,7 @@ export function EmptyState({ onCreateNote }: EmptyStateProps) {
       </p>
       <button
         onClick={onCreateNote}
-        className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-black/5 transition-all cursor-pointer"
+        className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-text-primary/5 transition-all cursor-pointer"
       >
         <Plus size={14} />
         <span>Create a note</span>
