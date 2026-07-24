@@ -1,17 +1,17 @@
+import { getUserKeyByProvider } from "../../src/modules/userkeys/userkeys.service";
 import { GroqProvider } from "./providers/groqProvider";
 import type { AIProvider } from "./types";
 
-export function getProvider(): AIProvider {
+export async function getProvider(userId: string): Promise<AIProvider> {
   const provider = process.env.PROVIDER;
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    throw new Error("API_KEY is not configured");
-  }
 
   switch (provider) {
     case "groq":
-      return new GroqProvider(apiKey, "openai/gpt-oss-120b");
+      const api_key = await getUserKeyByProvider(userId, "groq");
+      if (!api_key) {
+        throw new Error("API_KEY is not configured");
+      }
+      return new GroqProvider(api_key.key, "openai/gpt-oss-120b");
 
     default:
       throw new Error(`Unsupported provider: ${provider}`);

@@ -16,6 +16,8 @@ export const auth = betterAuth({
       secure: true, // ← required when sameSite=none
       partitioned: true, // ← optional: CHIPS support for modern browsers
     },
+    //! IMPORTANT: DISABLE CSRF IN DEV MODE ONLY, ENABLE IT IN PRODUCTION
+    disableCSRFCheck: true,
   },
   trustedOrigins: [
     "http://localhost:5173",

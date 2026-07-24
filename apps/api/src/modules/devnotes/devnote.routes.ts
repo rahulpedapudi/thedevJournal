@@ -19,5 +19,6 @@ devNoteRoutes.get("/:id", getDevNoteByID);
 devNoteRoutes.post("/", createDevNote);
 devNoteRoutes.patch("/:id", patchDevNote);
 devNoteRoutes.delete("/:id", deleteDevNote);
+
 devNoteRoutes.post("/:id/polish", polishDevNote);
 

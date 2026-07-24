@@ -1,13 +1,20 @@
 import express from "express";
 import cors from "cors";
-import { toNodeHandler } from "better-auth/node";
+
 import { auth } from "../lib/auth";
-import { userRoutes } from "./modules/users/user.routes";
-import { projectRoutes } from "./modules/devnotes/projects/project.routes";
-import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
-import { httpLogger } from "./middleware/logger-middleware";
-import { errorHandler } from "./middleware/error-handler";
 import { logger } from "../lib/logger";
+import { toNodeHandler } from "better-auth/node";
+
+// middleware
+import { errorHandler } from "./middleware/error-handler";
+import { httpLogger } from "./middleware/logger-middleware";
+
+// modules
+import { userRoutes } from "./modules/users/user.routes";
+import { projectRoutes } from "./modules/projects/project.routes";
+import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
+import { userkeysRoutes } from "./modules/userkeys/userkeys.routes";
+import { settingsRoutes } from "./modules/settings/settings.routes";
 
 const PORT = 3000;
 
@@ -41,6 +48,12 @@ app.use("/api/project", projectRoutes);
 
 // devnote routes
 app.use("/api/devnote", devNoteRoutes);
+
+// userkeys routes
+app.use("/api/keys", userkeysRoutes);
+
+// user settings routes
+app.use("/api/settings", settingsRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({

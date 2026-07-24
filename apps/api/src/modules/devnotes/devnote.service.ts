@@ -2,7 +2,6 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db/db";
 import { devNote } from "../../db/schemas";
 import type { PatchNoteBody } from "./devnotes.types";
-import { de } from "zod/v4/locales";
 
 // TODO: I should probably only return which is necessary instead of whole raw content for every each note.
 export async function getUserDevNotes(userId: string) {
@@ -20,7 +19,6 @@ export async function getUserDevNote(userId: string, devNoteId: string) {
   return note;
 }
 
-// when the user is creating a new note, i should return the ID of the note, and the client adds the params, (note/:id) so i can send patch requests once the id is present.
 export async function createUserDevNote(
   userId: string,
   title: string,
@@ -68,4 +66,3 @@ export async function deleteNote(userId: string, noteId: string) {
 
   return deleted;
 }
-

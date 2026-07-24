@@ -190,6 +190,7 @@ export async function polishDevNote(
 
     // Generate polished content
     const enrichedContent = await generatePolishedContent(
+      userId,
       note.noteType || "note",
       note.title || "Untitled",
       note.rawContent || "",
@@ -235,6 +236,7 @@ export async function polishDevNote(
 }
 
 async function generatePolishedContent(
+  userId: string,
   noteType: string,
   title: string,
   rawContent: string,
@@ -249,11 +251,12 @@ async function generatePolishedContent(
     {
       noteType: noteType,
       title: title,
+      userId: userId,
     },
     "Generating polished content prompt",
   );
 
-  const client = getProvider();
+  const client = await getProvider(userId);
 
   const content = await client.complete([
     {
