@@ -79,10 +79,7 @@ export function NoteEditor({
       {/* Editor Body */}
       {aiView === "notion" ? (
         <div className="flex flex-col flex-1">
-          <NotionEditor
-            content={localRawContent}
-            onChange={onContentChange}
-          />
+          <NotionEditor content={localRawContent} onChange={onContentChange} />
 
           {/* Action Footer */}
           <div className="flex items-center justify-between mt-6 pt-3 border-t border-border-subtle">
@@ -124,7 +121,7 @@ export function NoteEditor({
       ) : aiView === "raw" ? (
         <div className="flex flex-col flex-1 relative w-full">
           <textarea
-            className="w-full min-h-[360px] flex-1 bg-bg-surface border border-border-subtle focus:border-border-strong rounded p-3 text-text-primary font-mono text-xs leading-relaxed outline-none transition-colors resize-y"
+            className="w-full min-h-90 flex-1 bg-bg-surface border border-border-subtle focus:border-border-strong rounded p-3 text-text-primary font-mono text-xs leading-relaxed outline-none transition-colors resize-y"
             placeholder="// Write markdown scratchpad or code notes..."
             value={localRawContent}
             onChange={(e) => onContentChange(e.target.value)}

@@ -93,7 +93,11 @@ export function JournalWorkspace() {
     const timer = setTimeout(() => {
       updateNote.mutate(
         { title: localTitle, rawContent: localRawContent },
-        { onSettled: () => { isTypingRef.current = false; } }
+        {
+          onSettled: () => {
+            isTypingRef.current = false;
+          },
+        },
       );
     }, 1000);
 
@@ -137,8 +141,7 @@ export function JournalWorkspace() {
 
   const handleProjectChange = (projId: string) => {
     setLocalProjectId(projId);
-    if (noteId)
-      updateNote.mutate({ projectId: projId === "" ? null : projId });
+    if (noteId) updateNote.mutate({ projectId: projId === "" ? null : projId });
   };
 
   const handleDelete = () => {
@@ -199,10 +202,13 @@ export function JournalWorkspace() {
 
             {currentProjectName && (
               <>
-                <ChevronRight size={12} className="text-text-muted/60 shrink-0" />
+                <ChevronRight
+                  size={12}
+                  className="text-text-muted/60 shrink-0"
+                />
                 <span
                   onClick={() => navigate(`/projects/${projectId}`)}
-                  className="hover:text-text-primary cursor-pointer text-text-secondary truncate max-w-[140px]"
+                  className="hover:text-text-primary cursor-pointer text-text-secondary truncate max-w-35"
                 >
                   {currentProjectName}
                 </span>
@@ -211,8 +217,11 @@ export function JournalWorkspace() {
 
             {noteId && activeNote && (
               <>
-                <ChevronRight size={12} className="text-text-muted/60 shrink-0" />
-                <span className="text-text-primary font-medium truncate max-w-[160px]">
+                <ChevronRight
+                  size={12}
+                  className="text-text-muted/60 shrink-0"
+                />
+                <span className="text-text-primary font-medium truncate max-w-40">
                   {activeNote.title || "Untitled"}
                 </span>
               </>
@@ -228,7 +237,12 @@ export function JournalWorkspace() {
             className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded text-xs font-mono font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
           >
             {createNote.isPending ? (
-              <LoadingSpinner style={{ borderColor: "rgba(0,0,0,0.2)", borderLeftColor: "#000" }} />
+              <LoadingSpinner
+                style={{
+                  borderColor: "rgba(0,0,0,0.2)",
+                  borderLeftColor: "#000",
+                }}
+              />
             ) : (
               <Plus size={13} />
             )}
@@ -307,7 +321,8 @@ export function JournalWorkspace() {
                 >
                   <ArrowLeft size={13} />
                   <span>
-                    Back to {currentProjectName ? currentProjectName : "Workspace"}
+                    Back to{" "}
+                    {currentProjectName ? currentProjectName : "Workspace"}
                   </span>
                 </button>
               </div>

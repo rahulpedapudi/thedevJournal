@@ -4,7 +4,6 @@ import {
   Search,
   LayoutGrid,
   List as ListIcon,
-  FolderPlus,
   Plus,
   Sparkles,
   Trash2,
@@ -355,7 +354,7 @@ export function DriveDashboard({
             {/* ── ALWAYS PLACED AT THE STARTING OF THE NOTES GRID ─────────────── */}
             <div
               onClick={onCreateNote}
-              className="group bg-bg-surface/40 border border-dashed border-border-subtle hover:border-border-strong rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-bg-elevated/70 shadow-xs min-h-[160px]"
+              className="group bg-bg-surface/40 border border-dashed border-border-subtle hover:border-border-strong rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-bg-elevated/70 shadow-xs min-h-40"
             >
               <div className="w-10 h-10 rounded-full bg-bg-elevated border border-border-subtle flex items-center justify-center text-text-muted mb-2 group-hover:scale-105 transition-transform">
                 {isCreatingNote ? (
@@ -444,7 +443,7 @@ export function DriveDashboard({
 
                   {/* Card Footer: Project Tag & Date */}
                   <div className="flex items-center justify-between border-t border-border-subtle/50 pt-2.5 font-mono text-[10px] text-text-muted">
-                    <span className="truncate max-w-[140px] text-text-secondary">
+                    <span className="truncate max-w-35 text-text-secondary">
                       {project ? project.name : "Unassigned"}
                     </span>
 
