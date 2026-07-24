@@ -31,7 +31,7 @@ export interface SlashItem {
 export const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Heading 1",
-    description: "Big section heading",
+    description: "Big section title",
     searchTerms: ["h1", "heading1", "title", "header"],
     icon: Heading1,
     command: ({ editor, range }) => {
@@ -45,7 +45,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Heading 2",
-    description: "Medium section heading",
+    description: "Medium section header",
     searchTerms: ["h2", "heading2", "subtitle", "header"],
     icon: Heading2,
     command: ({ editor, range }) => {
@@ -59,7 +59,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Heading 3",
-    description: "Small section heading",
+    description: "Small sub-header",
     searchTerms: ["h3", "heading3", "subheading", "header"],
     icon: Heading3,
     command: ({ editor, range }) => {
@@ -73,7 +73,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Bullet List",
-    description: "Create a bulleted list",
+    description: "Bulleted itemized list",
     searchTerms: ["bullet", "list", "unordered", "ul"],
     icon: List,
     command: ({ editor, range }) => {
@@ -82,7 +82,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Numbered List",
-    description: "Create a numbered list",
+    description: "Ordered numerical list",
     searchTerms: ["number", "list", "ordered", "ol"],
     icon: ListOrdered,
     command: ({ editor, range }) => {
@@ -90,8 +90,8 @@ export const SLASH_ITEMS: SlashItem[] = [
     },
   },
   {
-    title: "Task List",
-    description: "Track tasks with a checkable list",
+    title: "Task Checklist",
+    description: "Checkable todo task list",
     searchTerms: ["task", "todo", "checkbox", "check"],
     icon: CheckSquare,
     command: ({ editor, range }) => {
@@ -99,8 +99,8 @@ export const SLASH_ITEMS: SlashItem[] = [
     },
   },
   {
-    title: "Quote",
-    description: "Capture a quote or callout",
+    title: "Blockquote",
+    description: "Quotations or callouts",
     searchTerms: ["quote", "blockquote", "cite"],
     icon: Quote,
     command: ({ editor, range }) => {
@@ -109,7 +109,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Code Block",
-    description: "Insert a syntax code block",
+    description: "Syntax-highlighted code snippet",
     searchTerms: ["code", "pre", "javascript", "typescript", "python"],
     icon: SquareCode,
     command: ({ editor, range }) => {
@@ -117,8 +117,8 @@ export const SLASH_ITEMS: SlashItem[] = [
     },
   },
   {
-    title: "Divider",
-    description: "Visually separate sections",
+    title: "Divider Line",
+    description: "Horizontal section divider",
     searchTerms: ["divider", "hr", "line", "separator"],
     icon: Minus,
     command: ({ editor, range }) => {
@@ -127,7 +127,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Bold Text",
-    description: "Make text bold",
+    description: "Emphasize with bold text",
     searchTerms: ["bold", "strong", "b"],
     icon: Bold,
     command: ({ editor, range }) => {
@@ -136,7 +136,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Italic Text",
-    description: "Make text italic",
+    description: "Slanted italic text",
     searchTerms: ["italic", "em", "i"],
     icon: Italic,
     command: ({ editor, range }) => {
@@ -145,7 +145,7 @@ export const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Inline Code",
-    description: "Format inline code snippet",
+    description: "Monospaced code snippet",
     searchTerms: ["code", "inline", "mono"],
     icon: Code,
     command: ({ editor, range }) => {
@@ -198,49 +198,63 @@ export const SlashMenuList = forwardRef<SlashMenuListHandler, SlashMenuListProps
 
     if (items.length === 0) {
       return (
-        <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-xl w-70 p-3 text-xs text-text-secondary text-center z-9999">
-          <span>No matching blocks</span>
+        <div className="bg-[#121215] border border-[#27272a] rounded-md shadow-2xl w-64 p-3 text-xs text-text-muted text-center font-mono z-9999">
+          <span>no matching blocks</span>
         </div>
       );
     }
 
     return (
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-xl w-70 h-80 overflow-y-auto p-1.5 z-9999">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary px-2 py-1">Basic Blocks</div>
-        <div className="flex flex-col gap-0.5">
-          {items.map((item, index) => {
-            const Icon = item.icon;
-            const isSelected = index === selectedIndex;
-            return (
-              <button
-                type="button"
-                key={item.title}
-                className={`flex items-center gap-2.5 w-full p-1.5 px-2 rounded-md border-none text-left cursor-pointer transition-colors ${
-                  isSelected ? "bg-accent-light" : "hover:bg-accent-light"
-                }`}
-                onClick={() => selectItem(index)}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <div
-                  className={`flex items-center justify-center w-7 h-7 rounded-md border text-text-primary shrink-0 transition-colors ${
+      <div className="bg-[#121215] border border-[#27272a] rounded-md shadow-2xl w-68 max-h-72 overflow-y-auto p-1.5 z-9999 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between text-[9px] font-mono font-semibold uppercase tracking-wider text-text-muted px-2 py-1 mb-1">
+            <span>Command Blocks</span>
+            <span>{items.length}</span>
+          </div>
+
+          <div className="flex flex-col gap-0.5">
+            {items.map((item, index) => {
+              const Icon = item.icon;
+              const isSelected = index === selectedIndex;
+              return (
+                <button
+                  type="button"
+                  key={item.title}
+                  className={`flex items-center gap-2.5 w-full p-1.5 px-2 rounded border text-left cursor-pointer transition-all ${
                     isSelected
-                      ? "bg-text-primary text-bg-surface border-text-primary"
-                      : "bg-text-primary/5 border-border-subtle"
+                      ? "bg-[#18181b] border-border-strong"
+                      : "bg-transparent border-transparent hover:bg-[#18181b]/50"
                   }`}
+                  onClick={() => selectItem(index)}
+                  onMouseEnter={() => setSelectedIndex(index)}
                 >
-                  <Icon size={16} />
-                </div>
-                <div className="flex flex-col overflow-hidden">
-                  <div className="text-xs font-medium text-text-primary leading-tight">
-                    {item.title}
+                  <div
+                    className={`flex items-center justify-center w-6 h-6 rounded border shrink-0 transition-colors ${
+                      isSelected
+                        ? "bg-text-primary text-bg-surface border-text-primary"
+                        : "bg-[#18181b] border-[#27272a] text-text-primary"
+                    }`}
+                  >
+                    <Icon size={13} />
                   </div>
-                  <div className="text-[11px] text-text-secondary truncate mt-0.5">
-                    {item.description}
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-xs font-semibold text-text-primary leading-tight font-sans">
+                      {item.title}
+                    </span>
+                    <span className="text-[10px] text-text-muted truncate mt-0.5 font-sans">
+                      {item.description}
+                    </span>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Raycast Keyboard Footer */}
+        <div className="mt-2 border-t border-[#27272a] pt-1.5 px-2 flex items-center justify-between text-[9px] font-mono text-text-muted">
+          <span>↑↓ Navigate</span>
+          <span>↵ Insert</span>
         </div>
       </div>
     );

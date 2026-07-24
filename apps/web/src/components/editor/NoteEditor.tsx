@@ -10,18 +10,15 @@ interface NoteEditorProps {
   activeNote: DevNote;
   projects: Project[];
 
-  // Local (optimistic) state — owned by the page, passed down
   localTitle: string;
   localRawContent: string;
   localNoteType: string;
   localProjectId: string;
   aiView: EditorViewMode;
 
-  // Mutation state
   isPolishing: boolean;
   isDeleting: boolean;
 
-  // Callbacks
   onTitleChange: (title: string) => void;
   onContentChange: (content: string) => void;
   onTypeChange: (type: string) => void;
@@ -32,9 +29,7 @@ interface NoteEditorProps {
 }
 
 /**
- * The main note editing panel.
- * Renders the meta bar, title input, and either the Notion WYSIWYG editor,
- * raw textarea, or AI-polished HTML render.
+ * Modern Obsidian-grade editor pane.
  */
 export function NoteEditor({
   activeNote,
@@ -54,12 +49,11 @@ export function NoteEditor({
   onPolish,
   onDelete,
 }: NoteEditorProps) {
-  const isProcessing =
-    isPolishing || activeNote.aiStatus === "processing";
+  const isProcessing = isPolishing || activeNote.aiStatus === "processing";
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Meta controls */}
+    <div className="flex flex-col flex-1 h-full max-w-4xl mx-auto w-full">
+      {/* Top Metadata Control Bar */}
       <NoteEditorMeta
         activeNote={activeNote}
         projects={projects}
@@ -71,16 +65,18 @@ export function NoteEditor({
         onViewChange={onViewChange}
       />
 
-      {/* Title */}
-      <input
-        type="text"
-        className="w-full text-2xl font-medium font-sans text-text-primary bg-transparent border-none outline-none mb-6 p-0 tracking-tight placeholder:text-border-subtle"
-        placeholder="Untitled Note"
-        value={localTitle}
-        onChange={(e) => onTitleChange(e.target.value)}
-      />
+      {/* Note Title Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          className="w-full text-2xl font-bold tracking-tight text-text-primary bg-transparent border-none outline-none p-0 placeholder:text-text-muted/40 font-sans"
+          placeholder="Untitled Note..."
+          value={localTitle}
+          onChange={(e) => onTitleChange(e.target.value)}
+        />
+      </div>
 
-      {/* Body — Notion WYSIWYG Editor, Raw Textarea, or Polished Render */}
+      {/* Editor Body */}
       {aiView === "notion" ? (
         <div className="flex flex-col flex-1">
           <NotionEditor
@@ -88,88 +84,85 @@ export function NoteEditor({
             onChange={onContentChange}
           />
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-subtle">
-            {/* Polish CTA */}
+          {/* Action Footer */}
+          <div className="flex items-center justify-between mt-6 pt-3 border-t border-border-subtle">
             <button
               type="button"
               onClick={onPolish}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               disabled={isProcessing || !localRawContent.trim()}
             >
               {isProcessing ? (
                 <>
                   <LoadingSpinner
                     style={{
-                      borderColor: "rgba(255,255,255,0.2)",
-                      borderLeftColor: "#fff",
+                      borderColor: "rgba(0,0,0,0.2)",
+                      borderLeftColor: "#000",
                     }}
                   />
                   <span>Polishing...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles size={14} />
-                  <span>Polish Note</span>
+                  <Sparkles size={13} />
+                  <span>Transform with AI</span>
                 </>
               )}
             </button>
 
-            {/* Delete */}
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-500 border border-border-subtle hover:bg-red-500/10 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded text-xs font-medium bg-transparent text-red-400 border border-border-subtle hover:bg-red-500/10 hover:border-red-500/30 transition-all cursor-pointer disabled:opacity-50"
               disabled={isDeleting}
             >
-              <Trash2 size={14} />
-              <span>Delete Note</span>
+              <Trash2 size={13} />
+              <span>Delete</span>
             </button>
           </div>
         </div>
       ) : aiView === "raw" ? (
         <div className="flex flex-col flex-1 relative w-full">
           <textarea
-            className="w-full h-100 min-h-75 border-b border-transparent focus:border-border-subtle bg-transparent text-text-primary font-mono text-sm leading-relaxed resize-y outline-none p-0 mb-6 transition-colors"
-            placeholder="// Write raw scratchpad code / notes here..."
+            className="w-full min-h-[360px] flex-1 bg-bg-surface border border-border-subtle focus:border-border-strong rounded p-3 text-text-primary font-mono text-xs leading-relaxed outline-none transition-colors resize-y"
+            placeholder="// Write markdown scratchpad or code notes..."
             value={localRawContent}
             onChange={(e) => onContentChange(e.target.value)}
           />
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-subtle">
-            {/* Polish CTA */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-subtle">
             <button
               type="button"
               onClick={onPolish}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               disabled={isProcessing || !localRawContent.trim()}
             >
               {isProcessing ? (
                 <>
                   <LoadingSpinner
                     style={{
-                      borderColor: "rgba(255,255,255,0.2)",
-                      borderLeftColor: "#fff",
+                      borderColor: "rgba(0,0,0,0.2)",
+                      borderLeftColor: "#000",
                     }}
                   />
                   <span>Polishing...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles size={14} />
-                  <span>Polish Note</span>
+                  <Sparkles size={13} />
+                  <span>Transform with AI</span>
                 </>
               )}
             </button>
 
-            {/* Delete */}
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center gap-1.5 h-8.5 px-3.5 rounded-md text-xs font-medium bg-transparent text-red-500 border border-border-subtle hover:bg-red-500/10 hover:border-red-400 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded text-xs font-medium bg-transparent text-red-400 border border-border-subtle hover:bg-red-500/10 hover:border-red-500/30 transition-all cursor-pointer disabled:opacity-50"
               disabled={isDeleting}
             >
-              <Trash2 size={14} />
-              <span>Delete Note</span>
+              <Trash2 size={13} />
+              <span>Delete</span>
             </button>
           </div>
         </div>
@@ -178,8 +171,6 @@ export function NoteEditor({
           activeNote={activeNote}
           projects={projects}
           onBackToEditor={() => onViewChange("notion")}
-          onDelete={onDelete}
-          isDeleting={isDeleting}
         />
       )}
     </div>

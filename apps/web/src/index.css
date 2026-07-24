@@ -1,12 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-bg-primary: var(--bg-primary);
   --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-status-draft-bg: var(--status-draft-bg);
@@ -17,32 +20,33 @@
   --color-status-completed-text: var(--status-completed-text);
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Geist Mono', monospace;
-  --shadow-subtle: var(--shadow-subtle);
-  --shadow-elevated: var(--shadow-elevated);
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 4px 12px -2px rgba(0, 0, 0, 0.6);
 }
 
 :root {
-  --bg-primary: #f8f9fa;
-  --bg-surface: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;  
-  --border-subtle: #e2e8f0;
+  /* Default to obsidian dark aesthetic (Vercel x Raycast) */
+  --bg-primary: #09090b;
+  --bg-surface: #121215;
+  --bg-elevated: #18181b;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-subtle: #27272a;
+  --border-strong: #3f3f46;
   
   --accent: #3b82f6;
-  --accent-light: rgba(59, 130, 246, 0.08);
+  --accent-light: rgba(59, 130, 246, 0.12);
   
-  --status-draft-bg: #f1f5f9;
-  --status-draft-text: #475569;
-  --status-pending-bg: #fef3c7;
-  --status-pending-text: #d97706;
-  --status-completed-bg: #dcfce7;
-  --status-completed-text: #15803d;
+  --status-draft-bg: #18181b;
+  --status-draft-text: #a1a1aa;
+  --status-pending-bg: #261704;
+  --status-pending-text: #fbbf24;
+  --status-completed-bg: #042f2e;
+  --status-completed-text: #2dd4bf;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Geist Mono', monospace;
-  
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-elevated: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
 
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -53,53 +57,49 @@
   box-sizing: border-box;
 }
 
-:root.dark, .dark {
-  --bg-primary: #090d16;
-  --bg-surface: #131b2e;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-subtle: #232f48;
+:root.light {
+  --bg-primary: #f4f4f5;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f8fafc;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --border-subtle: #e4e4e7;
+  --border-strong: #d4d4d8;
 
-  --accent: #3b82f6;
-  --accent-light: rgba(59, 130, 246, 0.18);
+  --accent: #2563eb;
+  --accent-light: rgba(37, 99, 235, 0.08);
 
-  --status-draft-bg: #1e293b;
-  --status-draft-text: #94a3b8;
-  --status-pending-bg: #451a03;
-  --status-pending-text: #fde68a;
-  --status-completed-bg: #064e3b;
-  --status-completed-text: #86efac;
-
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-elevated: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  --status-draft-bg: #f4f4f5;
+  --status-draft-text: #52525b;
+  --status-pending-bg: #fef3c7;
+  --status-pending-text: #b45309;
+  --status-completed-bg: #ccfbf1;
+  --status-completed-text: #0f766e;
 }
 
 *, *::before, *::after {
   box-sizing: inherit;
 }
 
-/* Custom Scrollbar */
+/* Custom Minimal Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: #27272a;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: #3f3f46;
 }
 
-
 /* ─────────────────────────────────────────────────────────────────────────── */
-/* Notion WYSIWYG Markdown Editor Styling                                     */
+/* Notion / Tiptap WYSIWYG Dark Editor Styling                                 */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 .notion-editor-container {
@@ -123,15 +123,17 @@
 }
 
 .notion-floating-toolbar {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-elevated);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
   z-index: 50;
-  animation: notionPopIn 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: notionPopIn 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @keyframes notionPopIn {
   from {
     opacity: 0;
-    transform: translateY(4px) scale(0.96);
+    transform: translateY(4px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -139,17 +141,14 @@
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────── */
-/* Notion Slash Commands Dropdown Menu Styling                                 */
-/* ─────────────────────────────────────────────────────────────────────────── */
-
+/* Raycast / Command Palette Dropdown Menu */
 .slash-menu-dropdown {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background-color: #121215;
+  border: 1px solid #27272a;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
-  width: 280px;
-  max-height: 320px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  width: 290px;
+  max-height: 340px;
   overflow-y: auto;
   padding: 6px;
   z-index: 9999;
@@ -158,17 +157,19 @@
 
 .slash-menu-empty {
   padding: 12px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   text-align: center;
+  font-family: var(--font-mono);
 }
 
 .slash-menu-header {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
+  font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
   padding: 6px 8px 4px 8px;
 }
 
@@ -189,23 +190,24 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
 }
 
 .slash-menu-item:hover,
 .slash-menu-item.selected {
-  background-color: var(--accent-light);
+  background-color: #18181b;
+  border-left: 2px solid var(--accent);
 }
 
 .slash-menu-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
-  background-color: rgba(0, 0, 0, 0.03);
-  border: 1px solid var(--border-subtle);
+  background-color: #18181b;
+  border: 1px solid #27272a;
   color: var(--text-primary);
   flex-shrink: 0;
 }
@@ -231,7 +233,7 @@
 
 .slash-menu-desc {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,11 +264,11 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
 }
 
 .notion-toolbar-btn:hover {
-  background-color: var(--accent-light);
+  background-color: var(--bg-elevated);
   color: var(--text-primary);
 }
 
@@ -285,21 +287,22 @@
 /* ProseMirror Canvas */
 .ProseMirror {
   outline: none;
-  min-height: 300px;
+  min-height: 320px;
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: 14.5px;
+  line-height: 1.7;
   color: var(--text-primary);
   padding-bottom: 32px;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  color: var(--text-secondary);
-  opacity: 0.4;
+  color: var(--text-muted);
+  opacity: 0.5;
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
+  font-family: var(--font-sans);
 }
 
 .ProseMirror h1 {
@@ -341,25 +344,38 @@
 }
 
 .ProseMirror li {
+  list-style-type: disc;
   margin-bottom: 0.25rem;
 }
 
 /* Task Checklists in Notion Editor */
 .ProseMirror ul[data-type="taskList"] {
   list-style: none;
+  list-style-type: none;
   padding-left: 0;
 }
 
+.ProseMirror ul[data-type="taskList"] li,
 .ProseMirror li[data-type="taskItem"] {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 4px;
+  list-style: none !important;
+  list-style-type: none !important;
+}
+
+.ProseMirror li[data-type="taskItem"]::marker {
+  display: none;
+  content: "";
 }
 
 .ProseMirror li[data-type="taskItem"] > label {
+  flex: 0 0 auto;
   user-select: none;
-  margin-top: 4px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
 }
 
 .ProseMirror li[data-type="taskItem"] > label input[type="checkbox"] {
@@ -367,21 +383,39 @@
   accent-color: var(--accent);
   width: 15px;
   height: 15px;
+  margin: 0;
   border-radius: 4px;
+}
+
+.ProseMirror li[data-type="taskItem"] > div {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.ProseMirror li[data-type="taskItem"] > div > p {
+  margin: 0;
 }
 
 .ProseMirror li[data-type="taskItem"][data-checked="true"] > div {
   text-decoration: line-through;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
-/* Notion-style Code Blocks */
+.ProseMirror li[data-type="taskItem"] > ul[data-type="taskList"],
+.ProseMirror li[data-type="taskItem"] > ol {
+  padding-left: 1.5rem;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* Code Blocks in Editor */
 .ProseMirror pre {
-  background-color: #1a1a19;
-  color: #f5f5f3;
+  background-color: #0d0d11;
+  border: 1px solid #27272a;
+  color: #f4f4f5;
   font-family: var(--font-mono);
   font-size: 13px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: 6px;
   overflow-x: auto;
   margin-top: 0.75rem;
@@ -390,22 +424,24 @@
 
 .ProseMirror code {
   font-family: var(--font-mono);
-  background-color: rgba(0, 0, 0, 0.05);
-  color: var(--text-primary);
+  background-color: #18181b;
+  color: #f4f4f5;
+  border: 1px solid #27272a;
   padding: 2px 5px;
   border-radius: 4px;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 
 .ProseMirror pre code {
   background-color: transparent;
+  border: none;
   padding: 0;
   color: inherit;
 }
 
-/* Notion-style Blockquotes */
+/* Blockquotes */
 .ProseMirror blockquote {
-  border-left: 3px solid var(--accent);
+  border-left: 2px solid var(--accent);
   margin: 1rem 0;
   padding-left: 14px;
   color: var(--text-secondary);
@@ -418,100 +454,78 @@
   margin: 1.5rem 0;
 }
 
-/* Footer Actions Area */
-.editor-footer-actions {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-subtle);
-}
-
 /* ─────────────────────────────────────────────────────────────────────────── */
-/* Notion AI-Polished Article Viewer Styling                                   */
+/* AI-Polished Article Viewer Dark Theme                                       */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 .ai-polished-render {
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.8;
   color: var(--text-primary);
 }
 
 .ai-polished-render h1 {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.025em;
   color: var(--text-primary);
-  margin-top: 1.75rem;
+  margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .ai-polished-render h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--text-primary);
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   margin-bottom: 0.5rem;
 }
 
 .ai-polished-render h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   margin-bottom: 0.35rem;
 }
 
-.ai-polished-render h4,
-.ai-polished-render h5,
-.ai-polished-render h6 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-top: 1rem;
-  margin-bottom: 0.25rem;
-}
-
 .ai-polished-render p {
   margin-top: 0;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1rem;
   color: var(--text-primary);
 }
 
-.ai-polished-render p {
-  margin-top: 0;
-  margin-bottom: 1.1rem;
-  color: #334155;
-}
-
 .ai-polished-render a {
-  color: #3b82f6;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color 0.15s ease;
 }
 
 .ai-polished-render a:hover {
-  color: #1d4ed8;
+  color: #60a5fa;
 }
 
-/* Callout blocks (> [!NOTE], > [!TIP], etc) */
+/* Callout blocks */
 .callout-block {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
   margin: 1.25rem 0;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.6;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
 }
 
 .callout-icon {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   flex-shrink: 0;
   margin-top: 2px;
@@ -519,61 +533,61 @@
 
 .callout-body {
   flex: 1;
-  color: #334155;
+  color: var(--text-primary);
 }
 
 .callout-note {
-  background-color: #f0f9ff;
-  border-color: #e0f2fe;
+  background-color: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 .callout-tip {
-  background-color: #f0fdf4;
-  border-color: #dcfce7;
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
 }
 .callout-warning {
-  background-color: #fffbeb;
-  border-color: #fef3c7;
+  background-color: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
 }
 .callout-important {
-  background-color: #faf5ff;
-  border-color: #f3e8ff;
+  background-color: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.2);
 }
 .callout-caution {
-  background-color: #fef2f2;
-  border-color: #fee2e2;
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Code Blocks Container */
 .code-block-container {
   position: relative;
-  background-color: #0f172a;
-  border-radius: 10px;
+  background-color: #0d0d11;
+  border-radius: 8px;
+  border: 1px solid #27272a;
   overflow: hidden;
   margin: 1.25rem 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .code-lang-tag {
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
-  background-color: #1e293b;
-  padding: 6px 14px;
-  border-bottom: 1px solid #334155;
+  color: var(--text-muted);
+  background-color: #121215;
+  padding: 4px 12px;
+  border-bottom: 1px solid #27272a;
 }
 
 .code-block-container pre {
   margin: 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.6;
-  color: #f8fafc;
+  color: #f4f4f5;
   background: transparent;
 }
 
@@ -587,20 +601,20 @@
 .ai-polished-render code {
   font-family: var(--font-mono);
   font-size: 13px;
-  background-color: var(--status-draft-bg);
-  color: var(--text-primary);
-  padding: 2px 6px;
-  border-radius: 5px;
-  border: 1px solid var(--border-subtle);
+  background-color: #18181b;
+  color: #f4f4f5;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid #27272a;
 }
 
 /* Blockquotes */
 .ai-polished-render blockquote {
-  border-left: 3.5px solid var(--accent);
-  background-color: var(--accent-light);
+  border-left: 2px solid var(--accent);
+  background-color: rgba(59, 130, 246, 0.05);
   margin: 1.25rem 0;
-  padding: 12px 18px;
-  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
   color: var(--text-secondary);
   font-style: italic;
 }
@@ -609,7 +623,7 @@
 .markdown-table-wrapper {
   overflow-x: auto;
   margin: 1.25rem 0;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border-subtle);
 }
 
@@ -617,19 +631,20 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 
 .markdown-table th {
   background-color: var(--bg-surface);
   font-weight: 600;
   color: var(--text-primary);
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
 }
 
 .markdown-table td {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
 }
@@ -639,20 +654,20 @@
 }
 
 .markdown-table tr:nth-child(even) {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-surface);
 }
 
 /* Lists */
 .ai-polished-render ul,
 .ai-polished-render ol {
-  padding-left: 24px;
+  padding-left: 22px;
   margin-top: 0;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1rem;
 }
 
 .ai-polished-render li {
-  margin-bottom: 0.35rem;
-  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
 }
 
 /* Task Checklists */
@@ -664,28 +679,26 @@
 .ai-polished-render li.task-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .ai-polished-render li.task-item input[type="checkbox"] {
   cursor: pointer;
   accent-color: var(--accent);
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   margin-top: 3px;
   border-radius: 4px;
 }
 
 .ai-polished-render li.task-completed span {
   text-decoration: line-through;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
-/* Horizontal Rule */
 .ai-polished-render hr {
   border: none;
   border-top: 1px solid var(--border-subtle);
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
-

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Folder } from "lucide-react";
+import { Folder, FolderPlus, Layers, Check } from "lucide-react";
 import { useCreateProject } from "../../hooks/useProjects";
 import type { Project } from "../../hooks/useProjects";
 import type { DevNote } from "../../hooks/useNotes";
@@ -13,10 +13,7 @@ interface ProjectListProps {
 }
 
 /**
- * Renders the "Projects" section of the sidebar:
- *  - "All Notes" entry (no filter)
- *  - One entry per project with note count badge
- *  - Inline "Create Project" form
+ * Modern dense project list navigation.
  */
 export function ProjectList({
   projects,
@@ -42,26 +39,38 @@ export function ProjectList({
   };
 
   return (
-    <div className="mb-6">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary pl-2 mb-2">Projects</div>
+    <div>
+      <div className="flex items-center justify-between px-2 mb-1.5">
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted">
+          Projects
+        </span>
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="text-text-muted hover:text-text-primary p-0.5 rounded transition-colors cursor-pointer"
+          title="Create Project"
+        >
+          <FolderPlus size={12} />
+        </button>
+      </div>
+
       <ul className="list-none p-0 m-0 flex flex-col gap-0.5">
-        {/* All Notes */}
+        {/* All Notes Entry */}
         <li
           onClick={() => {
             navigate("/");
             onProjectClick?.();
           }}
-          className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
+          className={`group flex items-center justify-between h-7 px-2 text-xs font-medium cursor-pointer rounded border transition-all ${
             !activeProjectId
-              ? "text-text-primary border-l-accent bg-text-primary/5"
-              : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-text-primary/5"
+              ? "bg-bg-elevated text-text-primary border-border-strong font-semibold"
+              : "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated/50"
           }`}
         >
           <div className="flex items-center gap-2 overflow-hidden">
-            <BookOpen size={14} className="shrink-0" />
-            <span className="truncate text-xs">All Notes</span>
+            <Layers size={13} className="shrink-0 text-text-muted group-hover:text-text-primary transition-colors" />
+            <span className="truncate text-xs">All Projects</span>
           </div>
-          <span className="text-[10px] bg-border-subtle text-text-secondary px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-mono text-text-muted px-1.5 py-0.2 rounded bg-bg-primary border border-border-subtle">
             {notes.length}
           </span>
         </li>
@@ -77,17 +86,17 @@ export function ProjectList({
                 navigate(`/projects/${proj.id}`);
                 onProjectClick?.();
               }}
-              className={`flex items-center justify-between py-1.5 px-2.5 text-xs font-medium cursor-pointer transition-all border-l-2 rounded-r-md ${
+              className={`group flex items-center justify-between h-7 px-2 text-xs font-medium cursor-pointer rounded border transition-all ${
                 isActive
-                  ? "text-text-primary border-l-accent bg-text-primary/5"
-                  : "text-text-secondary border-l-transparent hover:text-text-primary hover:bg-text-primary/5"
+                  ? "bg-bg-elevated text-text-primary border-border-strong font-semibold"
+                  : "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated/50"
               }`}
             >
               <div className="flex items-center gap-2 overflow-hidden">
-                <Folder size={14} className="shrink-0" />
+                <Folder size={13} className={`shrink-0 ${isActive ? "text-blue-400" : "text-text-muted group-hover:text-text-primary"}`} />
                 <span className="truncate text-xs">{proj.name}</span>
               </div>
-              <span className="text-[10px] bg-border-subtle text-text-secondary px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-text-muted px-1.5 py-0.2 rounded bg-bg-primary border border-border-subtle">
                 {count}
               </span>
             </li>
@@ -95,28 +104,27 @@ export function ProjectList({
         })}
       </ul>
 
-      {/* Inline new-project form */}
-      <div className="p-2">
-        {isCreating ? (
-          <form onSubmit={handleCreate} className="flex items-center gap-2">
+      {/* Inline inline new-project form */}
+      {isCreating && (
+        <form onSubmit={handleCreate} className="mt-1.5 px-1">
+          <div className="flex items-center gap-1 bg-bg-elevated border border-border-strong rounded p-1">
             <input
               type="text"
-              className="w-full h-7 text-xs px-2.5 bg-bg-surface border border-border-subtle rounded-md text-text-primary outline-none focus:border-text-primary"
+              className="w-full h-6 text-xs px-1.5 bg-transparent text-text-primary placeholder:text-text-muted outline-none font-sans"
               placeholder="Project name..."
               autoFocus
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
             />
-          </form>
-        ) : (
-          <button
-            onClick={() => setIsCreating(true)}
-            className="text-xs font-medium text-text-secondary hover:text-text-primary cursor-pointer border-none bg-transparent p-0 transition-colors"
-          >
-            + Create Project
-          </button>
-        )}
-      </div>
+            <button
+              type="submit"
+              className="h-5 px-1.5 bg-text-primary text-bg-surface text-[10px] font-medium rounded hover:opacity-90 cursor-pointer shrink-0"
+            >
+              <Check size={11} />
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

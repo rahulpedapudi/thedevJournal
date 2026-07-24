@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut, Plus, Sun, Moon } from "lucide-react";
+import { LogOut, Plus, Sun, Moon, LayoutDashboard } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
 import type { Project } from "../../hooks/useProjects";
 import type { DevNote } from "../../hooks/useNotes";
@@ -22,9 +22,8 @@ interface SidebarProps {
 }
 
 /**
- * The application sidebar shell.
- * Composes the brand header, "New Note" CTA, ProjectList, NoteList,
- * theme toggle, and user footer with sign-out.
+ * Modern dark developer sidebar (Vercel x Linear x Obsidian).
+ * Compact, high-density navigation, crisp 1px borders, monospace badges.
  */
 export function Sidebar({
   projects,
@@ -47,96 +46,129 @@ export function Sidebar({
 
   return (
     <aside
-      className={`fixed md:sticky top-0 z-1010 md:z-auto h-screen bg-bg-surface border-r border-border-subtle shadow-xl md:shadow-none transition-all duration-200 ease-out w-67.5 md:w-57.5 shrink-0 flex flex-col justify-between p-5 md:py-6 md:px-4 ${
-        isOpen ? "left-0" : "-left-67.5 md:left-0"
+      className={`fixed md:sticky top-0 z-1010 md:z-auto h-screen bg-bg-surface border-r border-border-subtle transition-all duration-200 ease-out w-64 md:w-60 shrink-0 flex flex-col justify-between p-3.5 select-none ${
+        isOpen ? "left-0 shadow-2xl" : "-left-64 md:left-0"
       }`}
     >
-      <div className="overflow-y-auto">
-        {/* Brand Header */}
-        <div
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Brand & Workspace Title Header */}
+        <div className="flex items-center justify-between px-2 py-1 mb-3">
+          <div
+            onClick={() => {
+              navigate("/");
+              onClose?.();
+            }}
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <div className="w-5.5 h-5.5 rounded bg-text-primary text-bg-surface flex items-center justify-center font-mono font-bold text-xs shadow-xs group-hover:scale-105 transition-transform">
+              {">_"}
+            </div>
+            <span className="text-xs font-semibold tracking-tight text-text-primary group-hover:text-white transition-colors">
+              thedevjournal
+            </span>
+          </div>
+
+          <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded border border-border-subtle text-text-muted bg-bg-elevated">
+            v1.0
+          </span>
+        </div>
+
+        {/* Dashboard Link */}
+        <button
           onClick={() => {
             navigate("/");
             onClose?.();
           }}
-          className="mb-6 px-2 flex items-center gap-2 cursor-pointer group"
+          className={`w-full h-7.5 px-2.5 rounded text-xs font-medium flex items-center gap-2 mb-3 border transition-colors cursor-pointer ${
+            !activeNoteId && !activeProjectId
+              ? "bg-bg-elevated text-text-primary border-border-strong font-semibold"
+              : "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated/50"
+          }`}
         >
-          <div className="w-7 h-7 rounded-lg bg-text-primary text-bg-surface flex items-center justify-center font-bold text-xs shadow-xs group-hover:scale-105 transition-transform">
-            d
-          </div>
-          <span className="text-sm font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors">
-            thedevjournal
-          </span>
-        </div>
+          <LayoutDashboard size={13} className="shrink-0 text-text-muted" />
+          <span className="truncate">Overview</span>
+        </button>
 
-        {/* New Note CTA */}
-        <div className="px-2 pb-4">
+        {/* Quick CTA Action */}
+        <div className="mb-4">
           <button
             onClick={() => {
               onNewNote();
               onClose?.();
             }}
-            className="w-full h-8.5 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-lg text-xs font-semibold bg-text-primary text-bg-surface hover:opacity-90 shadow-xs disabled:opacity-50 transition-all cursor-pointer"
+            className="w-full h-8 inline-flex items-center justify-between px-3 rounded text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
             disabled={newNoteIsPending}
           >
-            <Plus size={15} />
-            <span>New Note</span>
+            <div className="flex items-center gap-1.5">
+              <Plus size={14} />
+              <span>New Note</span>
+            </div>
+            <kbd className="hidden sm:inline-block text-[9px] font-mono bg-bg-surface/20 px-1 py-0.2 rounded text-bg-surface">
+              ⌘N
+            </kbd>
           </button>
         </div>
 
-        {/* Project nav */}
-        <ProjectList
-          projects={projects}
-          notes={notes}
-          activeProjectId={activeProjectId}
-          onProjectClick={onClose}
-        />
+        {/* Scrollable Navigation Lists */}
+        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+          {/* Projects List */}
+          <ProjectList
+            projects={projects}
+            notes={notes}
+            activeProjectId={activeProjectId}
+            onProjectClick={onClose}
+          />
 
-        {/* Notes list */}
-        <NoteList
-          notes={notesForList}
-          projects={projects}
-          isLoading={notesLoading}
-          activeNoteId={activeNoteId}
-          activeProjectId={activeProjectId}
-          onNoteClick={onClose}
-        />
+          {/* Notes List */}
+          <NoteList
+            notes={notesForList}
+            projects={projects}
+            isLoading={notesLoading}
+            activeNoteId={activeNoteId}
+            activeProjectId={activeProjectId}
+            onNoteClick={onClose}
+          />
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-border-subtle pt-4 flex flex-col gap-3">
+      {/* Footer Area — Senior Engineer System Status */}
+      <div className="border-t border-border-subtle pt-3 flex flex-col gap-2.5 shrink-0">
         {session && (
-          <div className="pl-2 overflow-hidden">
-            <div className="text-xs font-medium truncate text-text-primary">
-              {session.user.name}
+          <div className="flex items-center justify-between px-2 py-1 rounded bg-bg-elevated/40 border border-border-subtle/50">
+            <div className="flex flex-col truncate pr-2">
+              <span className="text-[11px] font-medium truncate text-text-primary leading-tight">
+                {session.user.name || "Developer"}
+              </span>
+              <span className="text-[9px] font-mono text-text-muted truncate">
+                {session.user.email}
+              </span>
             </div>
-            <div className="text-[11px] text-text-secondary truncate">
-              {session.user.email}
-            </div>
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Connected" />
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex-1 h-8.5 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-md text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-text-primary/5 transition-all cursor-pointer"
+            className="flex-1 h-7.5 inline-flex items-center justify-center gap-1.5 px-2 rounded text-[11px] font-medium bg-transparent text-text-secondary border border-border-subtle hover:text-text-primary hover:bg-bg-elevated transition-all cursor-pointer"
             title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
           >
             {resolvedTheme === "dark" ? (
-              <Sun size={14} className="text-amber-400" />
+              <Sun size={12} className="text-amber-400" />
             ) : (
-              <Moon size={14} className="text-slate-600" />
+              <Moon size={12} className="text-slate-400" />
             )}
             <span>{resolvedTheme === "dark" ? "Light" : "Dark"}</span>
           </button>
 
           <button
             onClick={onSignOut}
-            className="h-8.5 inline-flex items-center justify-center gap-1.5 px-3 rounded-md text-xs font-medium bg-transparent text-text-primary border border-border-subtle hover:bg-text-primary/5 transition-all cursor-pointer"
+            className="h-7.5 inline-flex items-center justify-center gap-1 px-2.5 rounded text-[11px] font-medium bg-transparent text-text-secondary border border-border-subtle hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all cursor-pointer"
             title="Sign Out"
           >
-            <LogOut size={13} />
-            <span>Sign Out</span>
+            <LogOut size={12} />
+            <span>Exit</span>
           </button>
         </div>
       </div>

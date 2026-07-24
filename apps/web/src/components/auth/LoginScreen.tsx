@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Sun, Moon } from "lucide-react";
+import { ArrowRight, Sun, Moon, ShieldCheck, Cpu, Zap } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
 import { useTheme } from "../../hooks/useTheme";
 import { LoadingSpinner } from "../LoadingSpinner";
@@ -10,8 +10,7 @@ interface LoginScreenProps {
 }
 
 /**
- * Shared login / signup screen.
- * Renders a two-panel layout: a form on the left, retro ASCII art on the right.
+ * Rebuilt Raycast / Vercel dark theme Auth screen.
  */
 export function LoginScreen({ mode }: LoginScreenProps) {
   const { data: session } = authClient.useSession();
@@ -24,10 +23,9 @@ export function LoginScreen({ mode }: LoginScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Redirect already-authenticated users straight to the workspace
   useEffect(() => {
     if (session) navigate("/");
-  }, [session]);
+  }, [session, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +45,9 @@ export function LoginScreen({ mode }: LoginScreenProps) {
         if (res.error) {
           setErrorMsg(res.error.message || "Failed to sign up.");
         } else {
-          // Auto-login after sign-up
           const loginRes = await authClient.signIn.email({ email, password });
           if (loginRes.error) {
-            setErrorMsg(
-              "Account created, but sign-in failed. Please log in manually."
-            );
+            setErrorMsg("Account created, but sign-in failed. Please log in manually.");
             navigate("/login");
           } else {
             navigate("/");
@@ -67,54 +62,69 @@ export function LoginScreen({ mode }: LoginScreenProps) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-bg-surface">
-      {/* Form Side */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-bg-surface relative">
+    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-bg-primary select-none">
+      {/* Form Panel */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 relative bg-bg-primary">
         <button
           type="button"
           onClick={toggleTheme}
-          className="absolute top-6 right-6 p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-text-primary/5 transition-colors cursor-pointer"
+          className="absolute top-6 right-6 p-2 rounded text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
           title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
         >
           {resolvedTheme === "dark" ? (
-            <Sun size={18} className="text-amber-400" />
+            <Sun size={16} className="text-amber-400" />
           ) : (
-            <Moon size={18} />
+            <Moon size={16} />
           )}
         </button>
 
-        <div className="w-full max-w-[320px]">
-          <div className="mb-8">
-            <h1 className="text-xl font-medium tracking-tight mb-2 text-text-primary">
-              thedevjournal
+        <div className="w-full max-w-sm bg-bg-surface border border-border-subtle rounded-lg p-6 shadow-2xl">
+          {/* Brand Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-text-primary text-bg-surface flex items-center justify-center font-mono font-bold text-xs">
+                {">_"}
+              </div>
+              <span className="text-sm font-bold tracking-tight text-text-primary font-mono">
+                thedevjournal.io
+              </span>
+            </div>
+            <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded border border-border-subtle text-text-muted bg-bg-elevated">
+              {mode === "signin" ? "AUTH" : "REG"}
+            </span>
+          </div>
+
+          <div className="mb-6">
+            <h1 className="text-lg font-bold tracking-tight text-text-primary font-sans mb-1">
+              {mode === "signin" ? "Welcome back" : "Create developer account"}
             </h1>
-            <p className="text-text-secondary text-xs">
+            <p className="text-xs text-text-muted font-sans">
               {mode === "signin"
-                ? "Enter your credentials to continue"
-                : "Create an account to begin journaling"}
+                ? "Enter your credentials to access your workspace."
+                : "Initialize your dev notes workspace."}
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-2.5 px-3.5 rounded-md text-xs mb-4 border bg-red-500/10 border-red-500/20 text-red-500">
+            <div className="p-2.5 rounded text-xs mb-4 border bg-red-500/10 border-red-500/20 text-red-400 font-mono">
               {errorMsg}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             {mode === "signup" && (
-              <div className="flex flex-col gap-1.5 mb-4">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="name"
-                  className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+                  className="text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted"
                 >
-                  Name
+                  Developer Name
                 </label>
                 <input
                   type="text"
                   id="name"
-                  className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
-                  placeholder="John Doe"
+                  className="w-full h-8 px-2.5 bg-bg-primary border border-border-subtle rounded text-text-primary text-xs outline-none focus:border-border-strong transition-colors font-sans"
+                  placeholder="e.g. Alex Rivera"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -122,36 +132,36 @@ export function LoginScreen({ mode }: LoginScreenProps) {
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5 mb-4">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="email"
-                className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+                className="text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted"
               >
-                Email
+                Email Address
               </label>
               <input
                 type="email"
                 id="email"
-                className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
-                placeholder="you@example.com"
+                className="w-full h-8 px-2.5 bg-bg-primary border border-border-subtle rounded text-text-primary text-xs outline-none focus:border-border-strong transition-colors font-sans"
+                placeholder="developer@domain.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
 
-            <div className="flex flex-col gap-1.5 mb-4">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="password"
-                className="text-[11px] font-medium uppercase tracking-wider text-text-secondary"
+                className="text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted"
               >
-                Password
+                Security Password
               </label>
               <input
                 type="password"
                 id="password"
-                className="w-full h-9 px-3 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs outline-none focus:border-text-primary transition-colors"
-                placeholder="••••••••"
+                className="w-full h-8 px-2.5 bg-bg-primary border border-border-subtle rounded text-text-primary text-xs outline-none focus:border-border-strong transition-colors font-sans"
+                placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -160,80 +170,105 @@ export function LoginScreen({ mode }: LoginScreenProps) {
 
             <button
               type="submit"
-              className="w-full h-8.5 mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-md text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
+              className="w-full h-8 mt-2 inline-flex items-center justify-center gap-1.5 px-3 rounded text-xs font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               disabled={loading}
             >
               {loading ? (
                 <LoadingSpinner
                   style={{
-                    borderColor: "rgba(255,255,255,0.2)",
-                    borderLeftColor: "#fff",
+                    borderColor: "rgba(0,0,0,0.2)",
+                    borderLeftColor: "#000",
                   }}
                 />
               ) : (
                 <>
-                  <span>{mode === "signin" ? "Sign In" : "Sign Up"}</span>
-                  <ArrowRight size={14} />
+                  <span>{mode === "signin" ? "Authenticate" : "Create Account"}</span>
+                  <ArrowRight size={13} />
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-xs text-text-secondary mt-6 text-center">
-            {mode === "signin" ? (
-              <>
-                Don&apos;t have an account?{" "}
-                <span
-                  className="text-accent cursor-pointer hover:underline"
-                  onClick={() => navigate("/signup")}
-                >
-                  Sign Up
-                </span>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <span
-                  className="text-accent cursor-pointer hover:underline"
-                  onClick={() => navigate("/login")}
-                >
-                  Sign In
-                </span>
-              </>
-            )}
-          </p>
+          <div className="mt-5 pt-4 border-t border-border-subtle text-center">
+            <p className="text-xs text-text-muted font-sans">
+              {mode === "signin" ? (
+                <>
+                  New developer?{" "}
+                  <button
+                    type="button"
+                    className="text-text-primary font-semibold hover:underline cursor-pointer bg-transparent border-none p-0"
+                    onClick={() => navigate("/signup")}
+                  >
+                    Register here
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already registered?{" "}
+                  <button
+                    type="button"
+                    className="text-text-primary font-semibold hover:underline cursor-pointer bg-transparent border-none p-0"
+                    onClick={() => navigate("/login")}
+                  >
+                    Sign in here
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Retro Dithered Art Side */}
-      <div className="hidden lg:flex flex-[1.2] bg-[#111110] items-center justify-center relative overflow-hidden border-l border-border-subtle">
-        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-size-[8px_8px]"></div>
-        <pre className="font-mono text-[10px] leading-tight text-[#888887] whitespace-pre select-none text-left z-10">
-{`+-------------------------------------------------------------+
-|                                                             |
-|   .---.                                                     |
-|  /     \\  __  __   __   _  _   __   __   _  _  _  _  _      |
-|  |     | (  \\/  ) /__\\ ( \\/ ) /__\\ / _\\ ( \\/ )( \\/ ) \\     |
-|  \\     /  )    ( /(__)\\ \\  / /(__)\\\\_  \\_)  (  \\  /  /     |
-|   '---'  (_/\\/\\_)(__)(__) \\/ (__)(__)__)(_/\\_)  \\/  (      |
-|                                                             |
-|  JOURNAL SYSTEM v1.0.0 // STATUS: READY                    |
-|  SESSION KEY: D5A3-9F2B-1E8C                                |
-|                                                             |
-|  [|||||||||||||||||||||||||||||||||||||||||||||||] 100%     |
-|                                                             |
-|  .........................................................  |
-|  ..* * * * * * * * * * * * * * * * * * * * * * * * * * *..  |
-|  ..*                                                   *..  |
-|  ..*   SYS.LOC: /dev/journal                           *..  |
-|  ..*   MEM.USE: 4.12 MB / 64.00 MB                     *..  |
-|  ..*   NET.CON: ONLINE (PORT 3000)                     *..  |
-|  ..*                                                   *..  |
-|  ..* * * * * * * * * * * * * * * * * * * * * * * * * * *..  |
-|  .........................................................  |
-|                                                             |
-+-------------------------------------------------------------+`}
-        </pre>
+      {/* Senior Developer Technical Showcase Panel (Raycast Aesthetic) */}
+      <div className="hidden lg:flex flex-1 bg-bg-surface items-center justify-center p-12 border-l border-border-subtle relative overflow-hidden">
+        <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              ● Engineering Workspace
+            </span>
+          </div>
+
+          <h2 className="text-xl font-bold tracking-tight text-text-primary font-sans">
+            Built for engineers who care about speed, clarity, and deep work.
+          </h2>
+
+          <div className="flex flex-col gap-3 font-mono text-xs text-text-secondary">
+            <div className="flex items-start gap-3 p-3 rounded border border-border-subtle bg-bg-primary">
+              <Zap size={15} className="text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-text-primary block mb-0.5">Keyboard First</span>
+                <span className="text-[11px] text-text-muted font-sans leading-normal">
+                  Command menu integration, fast slash `/` blocks, and immediate markdown scratchpads.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded border border-border-subtle bg-bg-primary">
+              <Cpu size={15} className="text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-text-primary block mb-0.5">AI Synthesis</span>
+                <span className="text-[11px] text-text-muted font-sans leading-normal">
+                  Transform raw notes into clean, structured technical documentation with one click.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded border border-border-subtle bg-bg-primary">
+              <ShieldCheck size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-text-primary block mb-0.5">Secure Architecture</span>
+                <span className="text-[11px] text-text-muted font-sans leading-normal">
+                  Encrypted keys, PostgreSQL schema, zero clutter, zero telemetry bloat.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] font-mono text-text-muted">
+            <span>THE DEV JOURNAL SYSTEM</span>
+            <span>ENCRYPTED & SYNCED</span>
+          </div>
+        </div>
       </div>
     </div>
   );

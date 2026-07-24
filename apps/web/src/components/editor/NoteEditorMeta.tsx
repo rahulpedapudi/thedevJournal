@@ -1,5 +1,6 @@
 import type { DevNote } from "../../hooks/useNotes";
 import type { Project } from "../../hooks/useProjects";
+import { Folder, Tag, Sparkles, FileText, Code2 } from "lucide-react";
 
 const NOTE_TYPES = [
   "note",
@@ -26,15 +27,8 @@ interface NoteEditorMetaProps {
   onViewChange: (view: EditorViewMode) => void;
 }
 
-function resolveStatusStyle(note: DevNote): string {
-  if (note.aiStatus === "completed" && note.enrichedContent) return "bg-status-completed-bg text-status-completed-text";
-  if (note.aiStatus === "processing") return "bg-status-pending-bg text-status-pending-text";
-  return "bg-status-draft-bg text-status-draft-text";
-}
-
 /**
- * The meta bar at the top of the editor:
- *   [Project selector] [Type selector] [Status chip]  |  [notion · raw · polished]
+ * Modern metadata toolbar (Linear x Obsidian).
  */
 export function NoteEditorMeta({
   activeNote,
@@ -46,89 +40,120 @@ export function NoteEditorMeta({
   onProjectChange,
   onViewChange,
 }: NoteEditorMetaProps) {
-  const statusStyle = resolveStatusStyle(activeNote);
-  const statusLabel =
-    activeNote.aiStatus === "completed" && activeNote.enrichedContent
-      ? "polished"
-      : activeNote.aiStatus;
+  const isPolished = activeNote.aiStatus === "completed" && activeNote.enrichedContent;
+  const isProcessing = activeNote.aiStatus === "processing";
+
+  // Calculate approximate word count & reading time
+  const wordCount = (activeNote.rawContent || "").trim().split(/\s+/).filter(Boolean).length;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-border-subtle pb-3 sm:pb-4 mb-6 gap-3 sm:gap-4">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-border-subtle pb-3 mb-5 gap-3">
+      {/* Controls & Metadata Dropdowns */}
+      <div className="flex items-center gap-2 flex-wrap text-xs">
         {/* Project Selector */}
-        <select
-          className="h-8.5 px-2.5 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs font-medium outline-none focus:border-text-primary transition-colors cursor-pointer"
-          value={localProjectId}
-          onChange={(e) => onProjectChange(e.target.value)}
-        >
-          <option value="">No Project</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative flex items-center">
+          <select
+            className="h-7 pl-2.5 pr-6 bg-bg-surface border border-border-subtle hover:border-border-strong rounded text-text-primary font-mono text-[11px] outline-none transition-colors cursor-pointer appearance-none"
+            value={localProjectId}
+            onChange={(e) => onProjectChange(e.target.value)}
+          >
+            <option value="">No Project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <Folder size={11} className="absolute right-2 text-text-muted pointer-events-none" />
+        </div>
 
         {/* Note Type Selector */}
-        <select
-          className="h-8.5 px-2.5 bg-bg-surface border border-border-subtle rounded-md text-text-primary text-xs font-medium outline-none focus:border-text-primary transition-colors cursor-pointer"
-          value={localNoteType}
-          onChange={(e) => onTypeChange(e.target.value)}
-        >
-          {NOTE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </option>
-          ))}
-        </select>
+        <div className="relative flex items-center">
+          <select
+            className="h-7 pl-2.5 pr-6 bg-bg-surface border border-border-subtle hover:border-border-strong rounded text-text-primary font-mono text-[11px] uppercase outline-none transition-colors cursor-pointer appearance-none"
+            value={localNoteType}
+            onChange={(e) => onTypeChange(e.target.value)}
+          >
+            {NOTE_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <Tag size={11} className="absolute right-2 text-text-muted pointer-events-none" />
+        </div>
 
-        {/* AI Status Chip */}
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium leading-tight ${statusStyle}`}>
-          {statusLabel}
+        {/* Status Badge */}
+        <span
+          className={`h-7 px-2 inline-flex items-center gap-1.5 rounded font-mono text-[10px] font-semibold border ${
+            isPolished
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              : isProcessing
+              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+              : "bg-bg-elevated text-text-muted border-border-subtle"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              isPolished
+                ? "bg-emerald-400"
+                : isProcessing
+                ? "bg-amber-400 animate-pulse"
+                : "bg-zinc-600"
+            }`}
+          />
+          <span className="uppercase">{isPolished ? "polished" : isProcessing ? "processing" : "draft"}</span>
+        </span>
+
+        {/* Word count badge */}
+        <span className="hidden md:inline-flex text-[10px] font-mono text-text-muted px-2 py-1 rounded bg-bg-elevated/40 border border-border-subtle/50">
+          {wordCount} words · {readTime} min read
         </span>
       </div>
 
-      {/* View Toggle Segmented Control */}
-      <div className="flex items-center bg-bg-primary border border-border-subtle rounded-lg p-0.5 self-start sm:self-auto">
+      {/* View Mode Segmented Controls */}
+      <div className="flex items-center bg-bg-primary border border-border-subtle rounded p-0.5 self-start sm:self-auto font-mono text-[11px]">
         <button
           onClick={() => onViewChange("notion")}
-          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-all border-none cursor-pointer ${
+          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
             aiView === "notion"
-              ? "bg-bg-surface text-text-primary shadow-xs font-semibold"
-              : "text-text-secondary hover:text-text-primary bg-transparent"
+              ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
+              : "text-text-muted hover:text-text-primary"
           }`}
-          title="Notion WYSIWYG live editor"
+          title="Visual Editor"
         >
-          Notion
+          <FileText size={12} />
+          <span>Editor</span>
         </button>
+
         <button
           onClick={() => onViewChange("raw")}
-          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-all border-none cursor-pointer ${
+          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
             aiView === "raw"
-              ? "bg-bg-surface text-text-primary shadow-xs font-semibold"
-              : "text-text-secondary hover:text-text-primary bg-transparent"
+              ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
+              : "text-text-muted hover:text-text-primary"
           }`}
-          title="Raw markdown editor"
+          title="Raw Markdown Scratchpad"
         >
-          Raw
+          <Code2 size={12} />
+          <span>Raw</span>
         </button>
+
         <button
           onClick={() => {
             if (activeNote.enrichedContent) onViewChange("polished");
           }}
-          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-all border-none ${
-            aiView === "polished"
-              ? "bg-bg-surface text-text-primary shadow-xs font-semibold"
-              : "text-text-secondary hover:text-text-primary bg-transparent"
-          } ${!activeNote.enrichedContent ? "cursor-not-allowed opacity-40" : "cursor-pointer opacity-100"}`}
           disabled={!activeNote.enrichedContent}
-          title={
-            !activeNote.enrichedContent
-              ? "Polish this note first to view the polished article"
-              : "AI Polished View"
-          }
+          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all ${
+            aiView === "polished"
+              ? "bg-bg-elevated text-emerald-400 font-semibold border border-border-strong"
+              : "text-text-muted hover:text-text-primary"
+          } ${!activeNote.enrichedContent ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+          title={!activeNote.enrichedContent ? "Polish note with AI first" : "Polished Article"}
         >
-          Polished
+          <Sparkles size={12} className={isPolished ? "text-emerald-400" : ""} />
+          <span>Polished</span>
         </button>
       </div>
     </div>
