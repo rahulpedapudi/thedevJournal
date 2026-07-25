@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { diff_match_patch } from "diff-match-patch";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,6 +10,7 @@ import {
   Moon,
   ArrowLeft,
   Plus,
+  Settings,
 } from "lucide-react";
 import { authClient } from "../lib/auth-client";
 import { apiFetch } from "../lib/api";
@@ -20,6 +22,7 @@ import {
   useUpdateNote,
   useDeleteNote,
   usePolishNote,
+  useDiffPatch,
 } from "../hooks/useNotes";
 import { useProjects, useCreateProject } from "../hooks/useProjects";
 import { NoteEditor } from "../components/editor/NoteEditor";
@@ -48,6 +51,7 @@ export function JournalWorkspace() {
   const createNote = useCreateNote();
   const createProject = useCreateProject();
   const updateNote = useUpdateNote(noteId);
+  const diffPatch = useDiffPatch(noteId);
   const deleteNote = useDeleteNote();
   const polishNote = usePolishNote(noteId);
 
@@ -81,18 +85,16 @@ export function JournalWorkspace() {
     }
   }, [noteId, activeNote]);
 
-  // ── Debounced auto-save (title + content) ────────────────────────────────
+  // ── Debounced auto-save: title (and other metadata) ──────────────────────
   useEffect(() => {
     if (!noteId || !activeNote) return;
-
     const hasTitleDiff = localTitle !== (activeNote.title ?? "");
-    const hasContentDiff = localRawContent !== (activeNote.rawContent ?? "");
-    if (!hasTitleDiff && !hasContentDiff) return;
+    if (!hasTitleDiff) return;
 
     isTypingRef.current = true;
     const timer = setTimeout(() => {
       updateNote.mutate(
-        { title: localTitle, rawContent: localRawContent },
+        { title: localTitle },
         {
           onSettled: () => {
             isTypingRef.current = false;
@@ -102,7 +104,32 @@ export function JournalWorkspace() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [localTitle, localRawContent]);
+  }, [localTitle]);
+
+  // ── Debounced auto-save: rawContent via diff patch ────────────────────────
+  useEffect(() => {
+    if (!noteId || !activeNote) return;
+    const hasContentDiff = localRawContent !== (activeNote.rawContent ?? "");
+    if (!hasContentDiff) return;
+
+    isTypingRef.current = true;
+    const timer = setTimeout(() => {
+      const dmp = new diff_match_patch();
+      const patches = dmp.patch_make(activeNote.rawContent ?? "", localRawContent);
+      const patchStr = dmp.patch_toText(patches);
+
+      diffPatch.mutate(
+        { patchStr, baseRevision: activeNote.revision },
+        {
+          onSettled: () => {
+            isTypingRef.current = false;
+          },
+        },
+      );
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [localRawContent]);
 
   const handleNewNote = async (options?: {
     title?: string;
@@ -251,7 +278,7 @@ export function JournalWorkspace() {
 
           {/* Sync Status */}
           <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-text-muted px-2 py-1 rounded bg-bg-primary border border-border-subtle/60">
-            {updateNote.isPending ? (
+            {updateNote.isPending || diffPatch.isPending ? (
               <span className="flex items-center gap-1 text-amber-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 <span>Saving...</span>
@@ -263,6 +290,16 @@ export function JournalWorkspace() {
               </span>
             )}
           </div>
+
+          {/* Settings Button */}
+          <button
+            type="button"
+            onClick={() => navigate("/settings")}
+            className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
+            title="LLM & Key Settings"
+          >
+            <Settings size={15} />
+          </button>
 
           {/* Theme Toggle */}
           <button

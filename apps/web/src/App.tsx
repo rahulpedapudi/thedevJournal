@@ -3,6 +3,7 @@ import { QueryProvider } from "./QueryProvider";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginScreen } from "./components/auth/LoginScreen";
 import { JournalWorkspace } from "./pages/JournalWorkspace";
+import { SettingsPage } from "./pages/SettingsPage";
 
 /**
  * Application entry — providers + route definitions only.
@@ -21,6 +22,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <JournalWorkspace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             }
           />

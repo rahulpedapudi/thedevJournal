@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../lib/api";
+import { diff_match_patch } from "diff-match-patch";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -8,6 +9,7 @@ import { apiFetch } from "../lib/api";
 export type DevNote = {
   id: string;
   title: string;
+  revision: number;
   rawContent: string;
   enrichedContent: string | null;
   noteType: string;
@@ -24,6 +26,11 @@ export type UpdateNotePayload = {
   projectId?: string | null;
   aiStatus?: string;
   enrichedContent?: string | null;
+};
+
+export type ApplyPatchPayload = {
+  patchStr: string;
+  baseRevision: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -82,6 +89,21 @@ export function useUpdateNote(noteId: string | undefined) {
   });
 }
 
+export function useDiffPatch(noteId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ApplyPatchPayload) =>
+      apiFetch(`/api/devnote/${noteId}/patch`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["note", noteId] });
+    },
+  });
+}
+
 /** Delete a note by ID. */
 export function useDeleteNote() {
   const queryClient = useQueryClient();
@@ -100,7 +122,7 @@ export function usePolishNote(noteId: string | undefined) {
   return useMutation({
     mutationFn: (id: string) =>
       apiFetch(`/api/devnote/${id}/polish`, { method: "POST" }).then(
-        (res) => res.data
+        (res) => res.data,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
