@@ -10,7 +10,7 @@ export async function getSettings(req: Request, res: Response) {
 
     res.status(200).json({
       message: "Settings retrieved successfully",
-      data: settings ?? [],
+      data: settings ?? null,
     });
   } catch (error) {
     res.status(500).json({
@@ -30,7 +30,7 @@ export async function postSettings(
     const settingsPosted = await postUserSettings(userId, req.body);
 
     res.status(201).json({
-      message: "Settings retrieved successfully",
+      message: "Settings saved successfully",
       data: settingsPosted,
     });
   } catch (error) {

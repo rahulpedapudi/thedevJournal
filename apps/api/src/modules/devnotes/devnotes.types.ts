@@ -24,4 +24,7 @@ export type PatchNoteBody = {
   aiStatus?: "pending" | "processing" | "completed" | "failed";
   enrichedContent?: string | null;
 };
-
+export type ApplyPatchBody = {
+  patchStr: string;
+  baseRevision: number;
+};

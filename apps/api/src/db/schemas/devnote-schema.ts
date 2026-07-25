@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 import { user } from "./auth-schema";
@@ -20,6 +20,8 @@ export const devNote = pgTable("dev_note", {
   }),
 
   title: text("title").default("Untitled"),
+
+  revision: integer("revision").default(1).notNull(),
 
   rawContent: text("raw_content").notNull(),
 

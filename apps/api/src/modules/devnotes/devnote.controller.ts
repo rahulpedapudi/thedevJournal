@@ -1,20 +1,21 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
 import {
   createUserDevNote,
   getUserDevNote,
   getUserDevNotes,
   patchNote,
   deleteNote,
+  generatePolishedContent,
+  applyDiffPatch,
 } from "./devnote.service";
 import type {
   CreateDevNoteBody,
   PatchNoteBody,
   DevNoteParams,
+  ApplyPatchBody,
 } from "./devnotes.types";
 
 import { logger } from "../../../lib/logger";
-
-import { getProvider } from "../../../lib/ai/factory";
 
 export async function getDevNotes(req: Request, res: Response): Promise<void> {
   const userId = req.user?.id as string;
@@ -134,6 +135,34 @@ export async function patchDevNote(
   }
 }
 
+export async function applyDiffPatchController(
+  req: Request<DevNoteParams, {}, ApplyPatchBody>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const noteId = req.params.id;
+  const userId = req.user!.id;
+  const { patchStr, baseRevision } = req.body;
+
+  try {
+    logger.info(
+      { noteId, userId, baseRevision },
+      "Applying diff patch to note",
+    );
+
+    const note = await applyDiffPatch(userId, noteId, patchStr, baseRevision);
+
+    logger.info({ noteId, userId }, "Diff patch applied successfully");
+
+    res.status(200).json({
+      success: true,
+      data: note,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function deleteDevNote(
   req: Request<DevNoteParams>,
   res: Response,
@@ -233,37 +262,4 @@ export async function polishDevNote(
       message: "Internal Server Error",
     });
   }
-}
-
-async function generatePolishedContent(
-  userId: string,
-  noteType: string,
-  title: string,
-  rawContent: string,
-): Promise<string> {
-  const dateStr = new Date().toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  logger.info(
-    {
-      noteType: noteType,
-      title: title,
-      userId: userId,
-    },
-    "Generating polished content prompt",
-  );
-
-  const client = await getProvider(userId);
-
-  const content = await client.complete([
-    {
-      content: `You are a professional developer and technical writer. Please polish the following ${noteType} titled "${title}" written on ${dateStr}. Ensure that the content is clear, concise, and well-structured. Here is the content:\n\n${rawContent}`,
-      role: "user",
-    },
-  ]);
-
-  return content;
 }

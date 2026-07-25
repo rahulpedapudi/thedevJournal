@@ -7,6 +7,7 @@ import {
   patchDevNote,
   deleteDevNote,
   polishDevNote,
+  applyDiffPatchController,
 } from "./devnote.controller";
 
 export const devNoteRoutes = Router();
@@ -18,7 +19,8 @@ devNoteRoutes.get("/:id", getDevNoteByID);
 
 devNoteRoutes.post("/", createDevNote);
 devNoteRoutes.patch("/:id", patchDevNote);
+devNoteRoutes.patch("/:id/patch", applyDiffPatchController);
+
 devNoteRoutes.delete("/:id", deleteDevNote);
 
 devNoteRoutes.post("/:id/polish", polishDevNote);
-

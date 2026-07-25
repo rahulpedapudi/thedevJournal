@@ -14,6 +14,19 @@ export async function postUserSettings(
   userId: string,
   { defaultProvider, customInstructions }: PostSettings,
 ) {
+  const existing = await getUserSettings(userId);
+  if (existing) {
+    const updatedSettings = await db
+      .update(userSettings)
+      .set({
+        ...(defaultProvider !== undefined && { defaultProvider }),
+        ...(customInstructions !== undefined && { customInstructions }),
+      })
+      .where(eq(userSettings.userId, userId))
+      .returning();
+    return updatedSettings[0];
+  }
+
   const postedSettings = await db
     .insert(userSettings)
     .values({
@@ -22,5 +35,5 @@ export async function postUserSettings(
       customInstructions: customInstructions,
     })
     .returning();
-  return postedSettings;
+  return postedSettings[0];
 }
