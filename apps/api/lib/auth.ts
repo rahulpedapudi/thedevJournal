@@ -1,23 +1,37 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, google } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { db } from "../src/db/db";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
-  baseURL: "https://thedevjournal.onrender.com", // ← add this
+  baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: true },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "github"],
+    },
+  },
+  socialProviders: {
+    google: {
+      accessType: "offline",
+      prompt: "select_account consent",
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
   advanced: {
     crossSubdomainCookies: {
       enabled: false, // different root domains, not subdomains
     },
     defaultCookieAttributes: {
-      sameSite: "none", // ← required for cross-origin requests
-      secure: true, // ← required when sameSite=none
-      partitioned: true, // ← optional: CHIPS support for modern browsers
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
+      partitioned: isProduction,
     },
-    //! IMPORTANT: DISABLE CSRF IN DEV MODE ONLY, ENABLE IT IN PRODUCTION
-    disableCSRFCheck: true,
   },
   trustedOrigins: [
     "http://localhost:5173",
