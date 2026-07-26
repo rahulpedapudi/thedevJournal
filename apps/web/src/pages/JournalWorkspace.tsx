@@ -11,12 +11,14 @@ import {
   ArrowLeft,
   Plus,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { authClient } from "../lib/auth-client";
 import { apiFetch } from "../lib/api";
 import { useTheme } from "../hooks/useTheme";
 import {
   useNotes,
+  useTrashNotes,
   useActiveNote,
   useCreateNote,
   useUpdateNote,
@@ -44,6 +46,7 @@ export function JournalWorkspace() {
   // ── Server state ────────────────────────────────────────────────────────
   const { data: projects = [] } = useProjects();
   const { data: notes = [], isLoading: notesLoading } = useNotes();
+  const { data: trashNotes = [] } = useTrashNotes();
   const { data: activeNote, isLoading: loadingActiveNote } =
     useActiveNote(noteId);
 
@@ -115,7 +118,10 @@ export function JournalWorkspace() {
     isTypingRef.current = true;
     const timer = setTimeout(() => {
       const dmp = new diff_match_patch();
-      const patches = dmp.patch_make(activeNote.rawContent ?? "", localRawContent);
+      const patches = dmp.patch_make(
+        activeNote.rawContent ?? "",
+        localRawContent,
+      );
       const patchStr = dmp.patch_toText(patches);
 
       diffPatch.mutate(
@@ -290,6 +296,21 @@ export function JournalWorkspace() {
               </span>
             )}
           </div>
+
+          {/* Recently Deleted / Trash Button */}
+          <button
+            type="button"
+            onClick={() => navigate("/trash")}
+            className="p-1.5 rounded text-text-muted hover:text-amber-400 hover:bg-bg-elevated transition-colors cursor-pointer relative"
+            title="Trash"
+          >
+            <Trash2 size={15} />
+            {trashNotes.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-3.5 h-3.5 px-1 bg-amber-500 text-black text-[9px] font-mono font-bold rounded-full flex items-center justify-center">
+                {trashNotes.length}
+              </span>
+            )}
+          </button>
 
           {/* Settings Button */}
           <button

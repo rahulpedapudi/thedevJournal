@@ -187,6 +187,14 @@ export function DriveDashboard({
             {activeProject ? activeProject.name : "All Journal Notes"}
           </h1>
         </div>
+
+        <button
+          onClick={() => navigate("/trash")}
+          className="h-7.5 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-mono font-medium bg-bg-surface border border-border-subtle hover:border-amber-500/40 text-text-muted hover:text-amber-400 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
+        >
+          <Trash2 size={13} className="text-amber-400" />
+          <span>Trash</span>
+        </button>
       </div>
 
       {/* ── macOS-Style Project Folders Grid ─────────────────────────────────── */}

@@ -14,6 +14,8 @@ export type DevNote = {
   noteType: string;
   projectId: string | null;
   aiStatus: string;
+  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -103,7 +105,15 @@ export function useDiffPatch(noteId: string | undefined) {
   });
 }
 
-/** Delete a note by ID. */
+/** Fetch all soft-deleted trash notes for the current user. */
+export function useTrashNotes() {
+  return useQuery<DevNote[]>({
+    queryKey: ["notes", "trash"],
+    queryFn: () => apiFetch("/api/devnote/trash").then((res) => res.data),
+  });
+}
+
+/** Delete a note by ID (soft delete). */
 export function useDeleteNote() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -111,6 +121,47 @@ export function useDeleteNote() {
       apiFetch(`/api/devnote/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["notes", "trash"] });
+    },
+  });
+}
+
+/** Restore a soft-deleted note from trash. */
+export function useRestoreNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch(`/api/devnote/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isDeleted: false, deletedAt: null }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["notes", "trash"] });
+    },
+  });
+}
+
+/** Permanently delete a note by ID. */
+export function usePermanentDeleteNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch(`/api/devnote/${id}?permanent=true`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes", "trash"] });
+    },
+  });
+}
+
+/** Empty all trash notes. */
+export function useEmptyTrash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch("/api/devnote/trash", { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes", "trash"] });
     },
   });
 }

@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { LogOut, Plus, Sun, Moon, LayoutDashboard } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { LogOut, Plus, Sun, Moon, LayoutDashboard, Trash2 } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
 import type { Project } from "../../hooks/useProjects";
 import type { DevNote } from "../../hooks/useNotes";
@@ -39,6 +39,7 @@ export function Sidebar({
   onClose,
 }: SidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: session } = authClient.useSession();
   const { resolvedTheme, toggleTheme } = useTheme();
 
@@ -73,21 +74,40 @@ export function Sidebar({
           </span>
         </div>
 
-        {/* Dashboard Link */}
-        <button
-          onClick={() => {
-            navigate("/");
-            onClose?.();
-          }}
-          className={`w-full h-7.5 px-2.5 rounded text-xs font-medium flex items-center gap-2 mb-3 border transition-colors cursor-pointer ${
-            !activeNoteId && !activeProjectId
-              ? "bg-bg-elevated text-text-primary border-border-strong font-semibold"
-              : "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated/50"
-          }`}
-        >
-          <LayoutDashboard size={13} className="shrink-0 text-text-muted" />
-          <span className="truncate">Overview</span>
-        </button>
+        {/* Navigation Links */}
+        <div className="flex flex-col gap-1 mb-3">
+          {/* Dashboard Link */}
+          <button
+            onClick={() => {
+              navigate("/");
+              onClose?.();
+            }}
+            className={`w-full h-7.5 px-2.5 rounded text-xs font-medium flex items-center gap-2 border transition-colors cursor-pointer ${
+              !activeNoteId && !activeProjectId && location.pathname === "/"
+                ? "bg-bg-elevated text-text-primary border-border-strong font-semibold"
+                : "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated/50"
+            }`}
+          >
+            <LayoutDashboard size={13} className="shrink-0 text-text-muted" />
+            <span className="truncate">Overview</span>
+          </button>
+
+          {/* Trash / Recently Deleted Link */}
+          <button
+            onClick={() => {
+              navigate("/trash");
+              onClose?.();
+            }}
+            className={`w-full h-7.5 px-2.5 rounded text-xs font-medium flex items-center gap-2 border transition-colors cursor-pointer ${
+              location.pathname === "/trash"
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/30 font-semibold"
+                : "bg-transparent text-text-secondary border-transparent hover:text-amber-400 hover:bg-bg-elevated/50"
+            }`}
+          >
+            <Trash2 size={13} className="shrink-0 text-amber-400" />
+            <span className="truncate">Recently Deleted</span>
+          </button>
+        </div>
 
         {/* Quick CTA Action */}
         <div className="mb-4">

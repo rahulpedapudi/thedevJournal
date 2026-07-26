@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginScreen } from "./components/auth/LoginScreen";
 import { JournalWorkspace } from "./pages/JournalWorkspace";
 import { SettingsPage } from "./pages/SettingsPage";
+import { RecentlyDeletedPage } from "./pages/RecentlyDeletedPage";
 
 /**
  * Application entry — providers + route definitions only.
@@ -22,6 +23,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <JournalWorkspace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trash"
+            element={
+              <ProtectedRoute>
+                <RecentlyDeletedPage />
               </ProtectedRoute>
             }
           />
