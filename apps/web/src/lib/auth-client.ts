@@ -1,6 +1,8 @@
 import { createAuthClient } from "better-auth/react";
-import { API_BASE } from "./api";
 
 export const authClient = createAuthClient({
-  baseURL: API_BASE,
+  // Use same origin so Vercel proxies /api/auth/* → Render.
+  // This keeps auth cookies first-party on the Vercel domain,
+  // which is required for mobile Safari (ITP) to persist the OAuth state cookie.
+  baseURL: window.location.origin,
 });
