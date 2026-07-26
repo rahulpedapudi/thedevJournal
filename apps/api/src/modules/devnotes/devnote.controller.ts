@@ -19,6 +19,7 @@ import type {
 
 import { logger } from "../../../lib/logger";
 
+
 export async function getDevNotes(req: Request, res: Response): Promise<void> {
   const userId = req.user?.id as string;
   try {
@@ -148,7 +149,11 @@ export async function patchDevNote(
 
     const updateData: PatchNoteBody = {
       ...data,
-      deletedAt: data.deletedAt ? new Date(data.deletedAt) : data.deletedAt === null ? null : undefined,
+      deletedAt: data.deletedAt
+        ? new Date(data.deletedAt)
+        : data.deletedAt === null
+          ? null
+          : undefined,
     };
 
     const note = await patchNote(userId, noteId, updateData);
@@ -214,9 +219,7 @@ export async function deleteDevNote(
 
     res.status(200).json({
       success: true,
-      message: isPermanent
-        ? "Note permanently deleted"
-        : "Note moved to trash",
+      message: isPermanent ? "Note permanently deleted" : "Note moved to trash",
     });
   } catch (error) {
     logger.error({ error, userId, devNoteId }, "Failed to delete note");
@@ -236,7 +239,10 @@ export async function emptyTrashNotesController(
   try {
     const deleted = await emptyTrashNotes(userId);
 
-    logger.info({ userId, count: deleted.length }, "Emptied trash successfully");
+    logger.info(
+      { userId, count: deleted.length },
+      "Emptied trash successfully",
+    );
 
     res.status(200).json({
       success: true,
