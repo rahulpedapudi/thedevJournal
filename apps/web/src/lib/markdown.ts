@@ -1,7 +1,7 @@
 /**
  * High-performance Markdown-to-HTML parser covering GitHub Flavored Markdown (GFM)
- * and Notion extensions: Headings (H1-H6), Callouts, Code blocks, Tables,
- * Checkboxes, Bullet & Numbered lists, Blockquotes, Bold, Italic, Strikethrough,
+ * and Notion extensions: Headings (H1-H6), Callouts, Fenced Code Blocks, GFM Tables,
+ * Task lists, Nested Bullet & Numbered lists, Blockquotes, Bold, Italic, Strikethrough,
  * Links, Inline code, and Horizontal Rules.
  */
 export function parseMarkdown(md: string): string {
@@ -10,21 +10,79 @@ export function parseMarkdown(md: string): string {
   // Normalize line endings
   let text = md.replace(/\r\n/g, "\n");
 
-  // Code blocks placeholder replacement to prevent parsing inside code blocks
+  // 1. Extract Code Blocks with safe unicode placeholders (e.g. \uE000CB_0\uE000)
   const codeBlocks: string[] = [];
-  text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    const escapedCode = escapeHtml(code.trim());
-    const langLabel = lang ? `<span class="code-lang-tag">${lang}</span>` : "";
-    const html = `<div class="code-block-container">${langLabel}<pre><code>${escapedCode}</code></pre></div>`;
+  text = text.replace(/```([a-zA-Z0-9_+-]*)[ \t]*\n([\s\S]*?)(?:```|$)/g, (_, lang, code) => {
+    const cleanLang = (lang || "").trim().toLowerCase();
+    const rawCode = code.trimEnd();
+    const escapedCode = escapeHtml(rawCode);
+    const langLabel = cleanLang ? cleanLang : "code";
+    const attrCode = escapeAttribute(rawCode);
+
+    const html = `<div class="code-block-container" data-lang="${cleanLang}"><div class="code-block-header"><span class="code-lang-tag">${langLabel}</span><button class="code-copy-btn" data-code="${attrCode}" title="Copy code"><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="copy-text">Copy</span></button></div><pre><code>${escapedCode}</code></pre></div>`;
+
     codeBlocks.push(html);
-    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+    return `\uE000CB_${codeBlocks.length - 1}\uE000`;
   });
 
-  // Callout blocks (> [!NOTE], > [!TIP], > [!WARNING], > [!IMPORTANT], > [!CAUTION])
-  text = text.replace(
-    /^>\s*\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*(.*)$/gim,
-    (_, type, content) => {
-      const typeLower = type.toLowerCase();
+  const lines = text.split("\n");
+  const formatted: string[] = [];
+
+  interface ListStackItem {
+    type: "ul" | "ol" | "task";
+    indent: number;
+  }
+  const listStack: ListStackItem[] = [];
+
+  const closeListStack = () => {
+    while (listStack.length > 0) {
+      const popped = listStack.pop();
+      if (popped) {
+        const closeTag = popped.type === "ol" ? "</ol>" : "</ul>";
+        formatted.push(`</li>${closeTag}`);
+      }
+    }
+  };
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Check code block placeholder
+    if (trimmed.startsWith("\uE000CB_") && trimmed.endsWith("\uE000")) {
+      closeListStack();
+      formatted.push(trimmed);
+      i++;
+      continue;
+    }
+
+    // Empty line
+    if (trimmed === "") {
+      closeListStack();
+      i++;
+      continue;
+    }
+
+    // Callout blocks (> [!NOTE], > [!TIP], > [!WARNING], > [!IMPORTANT], > [!CAUTION])
+    const calloutMatch = line.match(/^>\s*\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*(.*)$/i);
+    if (calloutMatch) {
+      closeListStack();
+      const typeLower = calloutMatch[1].toLowerCase();
+      const firstLineContent = calloutMatch[2];
+      const calloutLines: string[] = [firstLineContent];
+
+      i++;
+      while (i < lines.length && lines[i].trim().startsWith(">")) {
+        const subContent = lines[i].trim().replace(/^>\s?/, "");
+        if (!subContent.startsWith("[!")) {
+          calloutLines.push(subContent);
+          i++;
+        } else {
+          break;
+        }
+      }
+
       const icons: Record<string, string> = {
         note: "ℹ️",
         tip: "💡",
@@ -33,170 +91,258 @@ export function parseMarkdown(md: string): string {
         caution: "🚨",
       };
       const icon = icons[typeLower] || "💡";
-      return `<div class="callout-block callout-${typeLower}"><span class="callout-icon">${icon}</span><div class="callout-body">${content}</div></div>`;
+      const bodyHtml = calloutLines.map((l) => parseInline(l)).join("<br />");
+      formatted.push(
+        `<div class="callout-block callout-${typeLower}"><span class="callout-icon">${icon}</span><div class="callout-body">${bodyHtml}</div></div>`
+      );
+      continue;
     }
-  );
 
-  // Standard Blockquotes (> quote)
-  text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+    // Standard Blockquotes (> quote)
+    if (line.trim().startsWith(">")) {
+      closeListStack();
+      const quoteLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith(">")) {
+        quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+        i++;
+      }
+      const quoteHtml = quoteLines.map((l) => parseInline(l)).join("<br />");
+      formatted.push(`<blockquote>${quoteHtml}</blockquote>`);
+      continue;
+    }
 
-  // Escape raw HTML outside of preserved code blocks
-  text = escapeHtmlExceptPlaceholders(text);
+    // GFM Table
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      closeListStack();
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
 
-  // GFM Tables
-  text = text.replace(
-    /^\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/gm,
-    (_, headerRow, bodyRows) => {
-      const headers = headerRow
-        .split("|")
-        .map((h: string) => h.trim())
-        .filter((h: string) => h.length > 0);
-      const rows = bodyRows
-        .trim()
-        .split("\n")
-        .map((row: string) =>
-          row
-            .split("|")
-            .map((c: string) => c.trim())
-            .filter((c: string) => c.length > 0)
+      if (tableLines.length >= 2 && tableLines[1].includes("-")) {
+        const headerRow = tableLines[0];
+        const bodyRows = tableLines.slice(2);
+
+        const headers = headerRow
+          .split("|")
+          .map((h) => h.trim())
+          .filter((h) => h.length > 0);
+
+        const ths = headers.map((h) => `<th>${parseInline(h)}</th>`).join("");
+        const trs = bodyRows
+          .map((r) => {
+            const cells = r
+              .split("|")
+              .map((c) => c.trim())
+              .filter((c) => c.length > 0);
+            return `<tr>${cells.map((c) => `<td>${parseInline(c)}</td>`).join("")}</tr>`;
+          })
+          .join("");
+
+        formatted.push(
+          `<div class="markdown-table-wrapper"><table class="markdown-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`
         );
-
-      const ths = headers.map((h: string) => `<th>${h}</th>`).join("");
-      const trs = rows
-        .map(
-          (row: string[]) =>
-            `<tr>${row.map((c) => `<td>${c}</td>`).join("")}</tr>`
-        )
-        .join("");
-
-      return `<div class="markdown-table-wrapper"><table class="markdown-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+        continue;
+      }
     }
-  );
 
-  // Headings
-  text = text.replace(/^######\s+(.*)$/gm, "<h6>$1</h6>");
-  text = text.replace(/^#####\s+(.*)$/gm, "<h5>$1</h5>");
-  text = text.replace(/^####\s+(.*)$/gm, "<h4>$1</h4>");
-  text = text.replace(/^###\s+(.*)$/gm, "<h3>$1</h3>");
-  text = text.replace(/^##\s+(.*)$/gm, "<h2>$1</h2>");
-  text = text.replace(/^#\s+(.*)$/gm, "<h1>$1</h1>");
+    // Headings
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      closeListStack();
+      const level = headingMatch[1].length;
+      const content = parseInline(headingMatch[2]);
+      formatted.push(`<h${level}>${content}</h${level}>`);
+      i++;
+      continue;
+    }
 
-  // Checkboxes / Task lists
-  text = text.replace(
-    /^[-*]\s+\[\s*\]\s+(.*)$/gm,
-    '<li class="task-item"><input type="checkbox" disabled /> <span>$1</span></li>'
-  );
-  text = text.replace(
-    /^[-*]\s+\[[xX]\]\s+(.*)$/gm,
-    '<li class="task-item task-completed"><input type="checkbox" checked disabled /> <span>$1</span></li>'
-  );
+    // Horizontal Rule
+    if (/^(---|[*]{3}|_{3})$/.test(trimmed)) {
+      closeListStack();
+      formatted.push("<hr />");
+      i++;
+      continue;
+    }
 
-  // Unordered Lists
-  text = text.replace(/^[-*]\s+(.*)$/gm, "<li>$1</li>");
+    // Check for List Items (Unordered, Task, Ordered) with Indentation support
+    const listItem = parseListItem(line);
+    if (listItem.isList) {
+      const { indent, type, isChecked, content } = listItem;
+      const parsedContent = parseInline(content);
 
-  // Ordered Lists
-  text = text.replace(/^\d+\.\s+(.*)$/gm, '<li class="ordered-item">$1</li>');
+      if (listStack.length === 0) {
+        listStack.push({ type, indent });
+        const openTag = getListOpenTag(type);
+        formatted.push(`${openTag}${renderListItemInner(type, isChecked, parsedContent)}`);
+      } else {
+        const currentTop = listStack[listStack.length - 1];
 
-  // Horizontal Rule
-  text = text.replace(/^(---|\*\*\*)$/gm, "<hr />");
+        if (indent > currentTop.indent) {
+          listStack.push({ type, indent });
+          const openTag = getListOpenTag(type);
+          formatted.push(`${openTag}${renderListItemInner(type, isChecked, parsedContent)}`);
+        } else if (indent < currentTop.indent) {
+          while (listStack.length > 0 && listStack[listStack.length - 1].indent > indent) {
+            const popped = listStack.pop();
+            const closeTag = popped?.type === "ol" ? "</ol>" : "</ul>";
+            formatted.push(`</li>${closeTag}`);
+          }
+
+          if (listStack.length > 0 && listStack[listStack.length - 1].indent === indent) {
+            const top = listStack[listStack.length - 1];
+            if (top.type === type) {
+              formatted.push(`</li>${renderListItemInner(type, isChecked, parsedContent)}`);
+            } else {
+              const closeTag = top.type === "ol" ? "</ol>" : "</ul>";
+              listStack.pop();
+              listStack.push({ type, indent });
+              formatted.push(`</li>${closeTag}${getListOpenTag(type)}${renderListItemInner(type, isChecked, parsedContent)}`);
+            }
+          } else {
+            listStack.push({ type, indent });
+            formatted.push(`${getListOpenTag(type)}${renderListItemInner(type, isChecked, parsedContent)}`);
+          }
+        } else {
+          if (currentTop.type === type) {
+            formatted.push(`</li>${renderListItemInner(type, isChecked, parsedContent)}`);
+          } else {
+            const closeTag = currentTop.type === "ol" ? "</ol>" : "</ul>";
+            listStack.pop();
+            listStack.push({ type, indent });
+            formatted.push(`</li>${closeTag}${getListOpenTag(type)}${renderListItemInner(type, isChecked, parsedContent)}`);
+          }
+        }
+      }
+
+      i++;
+      continue;
+    }
+
+    // Standard Paragraph line
+    closeListStack();
+    formatted.push(`<p>${parseInline(trimmed)}</p>`);
+    i++;
+  }
+
+  closeListStack();
+
+  let result = formatted.join("\n");
+
+  codeBlocks.forEach((cb, idx) => {
+    result = result.replace(`\uE000CB_${idx}\uE000`, cb);
+  });
+
+  return result;
+}
+
+type ListType = "ul" | "ol" | "task";
+
+interface ParsedListItem {
+  isList: true;
+  indent: number;
+  type: ListType;
+  isChecked: boolean;
+  content: string;
+}
+
+interface ParsedNonListItem {
+  isList: false;
+}
+
+function parseListItem(line: string): ParsedListItem | ParsedNonListItem {
+  const indentMatch = line.match(/^(\s*)/);
+  const indentStr = indentMatch ? indentMatch[1] : "";
+  let indent = 0;
+  for (const ch of indentStr) {
+    indent += ch === "\t" ? 2 : 1;
+  }
+
+  const rest = line.slice(indentStr.length);
+
+  const taskMatch = rest.match(/^([-*+])\s+\[([ xX]?)\]\s+(.*)$/);
+  if (taskMatch) {
+    return {
+      isList: true,
+      indent,
+      type: "task",
+      isChecked: taskMatch[2].toLowerCase() === "x",
+      content: taskMatch[3],
+    };
+  }
+
+  const ulMatch = rest.match(/^([-*+])\s+(.*)$/);
+  if (ulMatch) {
+    return {
+      isList: true,
+      indent,
+      type: "ul",
+      isChecked: false,
+      content: ulMatch[2],
+    };
+  }
+
+  const olMatch = rest.match(/^(\d+)\.\s+(.*)$/);
+  if (olMatch) {
+    return {
+      isList: true,
+      indent,
+      type: "ol",
+      isChecked: false,
+      content: olMatch[2],
+    };
+  }
+
+  return { isList: false };
+}
+
+function getListOpenTag(type: "ul" | "ol" | "task"): string {
+  if (type === "task") return '<ul class="task-list">';
+  if (type === "ol") return "<ol>";
+  return "<ul>";
+}
+
+function renderListItemInner(type: "ul" | "ol" | "task", isChecked: boolean, content: string): string {
+  if (type === "task") {
+    const checkedAttr = isChecked ? "checked" : "";
+    const completedClass = isChecked ? " task-completed" : "";
+    return `<li class="task-item${completedClass}"><input type="checkbox" ${checkedAttr} disabled /> <span>${content}</span>`;
+  }
+  if (type === "ol") {
+    return `<li class="ordered-item">${content}`;
+  }
+  return `<li>${content}`;
+}
+
+function parseInline(text: string): string {
+  if (!text) return "";
+
+  let res = text;
 
   // Strikethrough
-  text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+  res = res.replace(/~~(.*?)~~/g, "<del>$1</del>");
 
-  // Bold & Italic
-  text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
-  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
-  text = text.replace(/_(.*?)_/g, "<em>$1</em>");
+  // Bold & Italic combined ***text***
+  res = res.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
 
-  // Inline code
-  text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // Bold **text**
+  res = res.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-  // Links
-  text = text.replace(
+  // Italic *text* or _text_
+  res = res.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  res = res.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+
+  // Inline code `code`
+  res = res.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // Links [text](url)
+  res = res.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
 
-  // Format list wrapping & paragraphs
-  const lines = text.split("\n");
-  let inUl = false;
-  let inOl = false;
-  const formatted: string[] = [];
-
-  for (let line of lines) {
-    const trimmed = line.trim();
-
-    // Check code block placeholder
-    if (trimmed.startsWith("__CODE_BLOCK_")) {
-      if (inUl) {
-        formatted.push("</ul>");
-        inUl = false;
-      }
-      if (inOl) {
-        formatted.push("</ol>");
-        inOl = false;
-      }
-      formatted.push(line);
-      continue;
-    }
-
-    if (trimmed.startsWith("<li")) {
-      if (trimmed.includes("ordered-item")) {
-        if (!inOl) {
-          if (inUl) {
-            formatted.push("</ul>");
-            inUl = false;
-          }
-          inOl = true;
-          formatted.push("<ol>");
-        }
-      } else {
-        if (!inUl) {
-          if (inOl) {
-            formatted.push("</ol>");
-            inOl = false;
-          }
-          inUl = true;
-          formatted.push('<ul class="task-list">');
-        }
-      }
-      formatted.push(line);
-    } else {
-      if (inUl) {
-        formatted.push("</ul>");
-        inUl = false;
-      }
-      if (inOl) {
-        formatted.push("</ol>");
-        inOl = false;
-      }
-
-      if (
-        trimmed === "" ||
-        trimmed.startsWith("<h") ||
-        trimmed.startsWith("<hr") ||
-        trimmed.startsWith("<blockquote") ||
-        trimmed.startsWith("<div")
-      ) {
-        formatted.push(line);
-      } else {
-        formatted.push(`<p>${line}</p>`);
-      }
-    }
-  }
-
-  if (inUl) formatted.push("</ul>");
-  if (inOl) formatted.push("</ol>");
-
-  let result = formatted.join("\n");
-
-  // Restore code blocks
-  codeBlocks.forEach((cb, idx) => {
-    result = result.replace(`__CODE_BLOCK_${idx}__`, cb);
-  });
-
-  return result;
+  return res;
 }
 
 function escapeHtml(str: string): string {
@@ -208,12 +354,12 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function escapeHtmlExceptPlaceholders(str: string): string {
-  // Replace HTML tags except code block placeholders
-  return str.replace(/<(?!\/?__CODE_BLOCK_)[^>]+>/g, (match) => {
-    return match
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  });
+function escapeAttribute(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
+
