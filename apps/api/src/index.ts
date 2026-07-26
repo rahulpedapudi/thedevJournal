@@ -20,9 +20,9 @@ const PORT = 3000;
 
 const app = express();
 
-// Trust only the immediate upstream proxy (Vercel edge).
-// Using 1 instead of true avoids trusting arbitrary X-Forwarded-For chains.
-app.set("trust proxy", 1);
+// Trust reverse proxies (Vercel edge -> Render proxy -> Express container)
+// so Express resolves req.hostname and req.protocol from X-Forwarded-* headers correctly.
+app.set("trust proxy", true);
 
 app.use(httpLogger);
 
