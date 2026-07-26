@@ -20,7 +20,9 @@ const PORT = 3000;
 
 const app = express();
 
-app.set("trust proxy", true);
+// Trust only the immediate upstream proxy (Vercel edge).
+// Using 1 instead of true avoids trusting arbitrary X-Forwarded-For chains.
+app.set("trust proxy", 1);
 
 app.use(httpLogger);
 
@@ -33,7 +35,15 @@ app.use(
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-csrf-token",
+      "x-better-auth-timestamp",
+      "x-better-auth-nonce",
+      "cookie",
+    ],
+    exposedHeaders: ["set-cookie"],
   }),
 );
 

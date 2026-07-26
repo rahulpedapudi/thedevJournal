@@ -2,6 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../src/db/db";
 
+// In production BETTER_AUTH_URL must be the Vercel proxy URL (NOT the Render URL)
+// because all browser traffic—including OAuth callbacks—goes through Vercel.
 const baseURL = process.env.BETTER_AUTH_URL?.trim() || "http://localhost:3000";
 
 export const auth = betterAuth({
@@ -37,4 +39,10 @@ export const auth = betterAuth({
     "https://thedevjournal.onrender.com",
     "https://the-dev-journal-five.vercel.app",
   ],
+  advanced: {
+    // Cookies must be Secure + SameSite=Lax when behind the Vercel proxy.
+    // Do NOT set crossSubdomainCookies — we only need the single Vercel domain.
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookiePrefix: "better-auth",
+  },
 });
