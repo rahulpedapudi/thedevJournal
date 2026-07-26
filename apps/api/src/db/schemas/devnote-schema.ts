@@ -1,4 +1,10 @@
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 import { user } from "./auth-schema";
@@ -48,6 +54,10 @@ export const devNote = pgTable("dev_note", {
   })
     .notNull()
     .default("pending"),
+
+  isDeleted: boolean("is_deleted").default(false).notNull(),
+
+  deletedAt: timestamp("deleted_at"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 

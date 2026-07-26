@@ -13,7 +13,20 @@ import { diff_match_patch } from "diff-match-patch";
 // TODO: I should probably only return which is necessary instead of whole raw content for every each note.
 export async function getUserDevNotes(userId: string) {
   const notes = await db.query.devNote.findMany({
-    where: eq(devNote.userId, userId),
+    where: and(eq(devNote.userId, userId), eq(devNote.isDeleted, false)),
+    columns: {
+      enrichedContent: false,
+    },
+  });
+  return notes;
+}
+
+export async function getUserTrashNotes(userId: string) {
+  const notes = await db.query.devNote.findMany({
+    where: and(eq(devNote.userId, userId), eq(devNote.isDeleted, true)),
+    columns: {
+      enrichedContent: false,
+    },
   });
   return notes;
 }
@@ -21,7 +34,11 @@ export async function getUserDevNotes(userId: string) {
 // returns only single dev note with all the fields
 export async function getUserDevNote(userId: string, devNoteId: string) {
   const note = await db.query.devNote.findFirst({
-    where: and(eq(devNote.userId, userId), eq(devNote.id, devNoteId)),
+    where: and(
+      eq(devNote.userId, userId),
+      eq(devNote.isDeleted, false),
+      eq(devNote.id, devNoteId),
+    ),
   });
   return note;
 }
@@ -98,6 +115,7 @@ export async function applyDiffPatch(
     .returning();
 
   await db.insert(entryRevision).values({
+    noteId: noteId,
     userId: userId,
     patch: patchStr,
     revision: note.revision,
@@ -110,15 +128,44 @@ export async function applyDiffPatch(
   return patched;
 }
 
-export async function deleteNote(userId: string, noteId: string) {
+export async function deleteNote(
+  userId: string,
+  noteId: string,
+  permanent = false,
+) {
+  if (permanent) {
+    const deleted = await db
+      .delete(devNote)
+      .where(and(eq(devNote.userId, userId), eq(devNote.id, noteId)))
+      .returning();
+
+    if (deleted.length === 0) {
+      throw "id not found";
+    }
+    return deleted;
+  }
+
   const deleted = await db
-    .delete(devNote)
+    .update(devNote)
+    .set({
+      isDeleted: true,
+      deletedAt: new Date(),
+    })
     .where(and(eq(devNote.userId, userId), eq(devNote.id, noteId)))
     .returning();
 
   if (deleted.length === 0) {
     throw "id not found";
   }
+
+  return deleted;
+}
+
+export async function emptyTrashNotes(userId: string) {
+  const deleted = await db
+    .delete(devNote)
+    .where(and(eq(devNote.userId, userId), eq(devNote.isDeleted, true)))
+    .returning();
 
   return deleted;
 }

@@ -36,7 +36,7 @@ app.use(
 );
 
 // Better Auth route
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/auth/*splat", toNodeHandler(auth) as any);
 
 app.use(express.json());
 

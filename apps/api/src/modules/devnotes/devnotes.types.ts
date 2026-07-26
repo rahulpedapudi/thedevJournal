@@ -23,6 +23,8 @@ export type PatchNoteBody = {
     | "note";
   aiStatus?: "pending" | "processing" | "completed" | "failed";
   enrichedContent?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 };
 export type ApplyPatchBody = {
   patchStr: string;

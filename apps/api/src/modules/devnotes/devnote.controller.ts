@@ -7,6 +7,8 @@ import {
   deleteNote,
   generatePolishedContent,
   applyDiffPatch,
+  getUserTrashNotes,
+  emptyTrashNotes,
 } from "./devnote.service";
 import type {
   CreateDevNoteBody,
@@ -72,6 +74,32 @@ export async function getDevNoteByID(
   }
 }
 
+export async function getTrashNotes(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id as string;
+  try {
+    const notes = await getUserTrashNotes(userId);
+
+    logger.info(
+      { userId, count: notes?.length || 0 },
+      "Retrieved user trash devnotes",
+    );
+
+    res.status(200).json({
+      success: true,
+      data: notes,
+    });
+  } catch (error) {
+    logger.error({ error, userId }, "Failed to retrieve user trash devnotes");
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
+
 export async function createDevNote(
   req: Request<{}, {}, CreateDevNoteBody>,
   res: Response,
@@ -118,7 +146,12 @@ export async function patchDevNote(
       "Patching note",
     );
 
-    const note = await patchNote(userId, noteId, data);
+    const updateData: PatchNoteBody = {
+      ...data,
+      deletedAt: data.deletedAt ? new Date(data.deletedAt) : data.deletedAt === null ? null : undefined,
+    };
+
+    const note = await patchNote(userId, noteId, updateData);
 
     logger.info({ noteId, userId }, "Patched note successfully");
 
@@ -169,18 +202,49 @@ export async function deleteDevNote(
 ): Promise<void> {
   const devNoteId = req.params.id;
   const userId = req.user!.id;
+  const isPermanent = req.query.permanent === "true";
 
   try {
-    await deleteNote(userId, devNoteId);
+    await deleteNote(userId, devNoteId, isPermanent);
 
-    logger.info({ devNoteId, userId }, "Deleted note successfully");
+    logger.info(
+      { devNoteId, userId, isPermanent },
+      isPermanent ? "Permanently deleted note" : "Soft deleted note",
+    );
 
     res.status(200).json({
       success: true,
-      message: "Note deleted successfully",
+      message: isPermanent
+        ? "Note permanently deleted"
+        : "Note moved to trash",
     });
   } catch (error) {
     logger.error({ error, userId, devNoteId }, "Failed to delete note");
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
+
+export async function emptyTrashNotesController(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const userId = req.user!.id;
+
+  try {
+    const deleted = await emptyTrashNotes(userId);
+
+    logger.info({ userId, count: deleted.length }, "Emptied trash successfully");
+
+    res.status(200).json({
+      success: true,
+      message: "Trash emptied successfully",
+      count: deleted.length,
+    });
+  } catch (error) {
+    logger.error({ error, userId }, "Failed to empty trash");
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { user } from "./auth-schema";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const project = pgTable("project", {
   id: text("id")
@@ -22,6 +22,10 @@ export const project = pgTable("project", {
   })
     .notNull()
     .default("active"),
+
+  isDeleted: boolean("is_deleted").default(false).notNull(),
+
+  deletedAt: timestamp("deleted_at"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 

@@ -1,6 +1,7 @@
 import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 import { sql } from "drizzle-orm";
+import { devNote } from "./devnote-schema";
 
 export const entryRevision = pgTable("entry_revision", {
   id: text("id")
@@ -10,6 +11,12 @@ export const entryRevision = pgTable("entry_revision", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, {
+      onDelete: "cascade",
+    }),
+
+  noteId: text("note_id")
+    .notNull()
+    .references(() => devNote.id, {
       onDelete: "cascade",
     }),
 
