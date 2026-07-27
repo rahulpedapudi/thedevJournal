@@ -118,7 +118,7 @@ export async function createDevNote(
 
     res.status(201).json({
       success: true,
-      data: note,
+      data: note?.[0] ?? note,
     });
   } catch (error) {
     logger.error({ error, userId, title }, "Failed to create devnote");
