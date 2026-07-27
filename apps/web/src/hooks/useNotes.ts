@@ -67,7 +67,7 @@ export function useCreateNote() {
       apiFetch("/api/devnote", {
         method: "POST",
         body: JSON.stringify({ title: "Untitled Note", rawContent: "" }),
-      }).then((res) => res.data),
+      }).then((res) => (Array.isArray(res.data) ? res.data[0] : res.data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
@@ -158,8 +158,7 @@ export function usePermanentDeleteNote() {
 export function useEmptyTrash() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiFetch("/api/devnote/trash", { method: "DELETE" }),
+    mutationFn: () => apiFetch("/api/devnote/trash", { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes", "trash"] });
     },

@@ -1,6 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Sun, Moon, HardDrive, Plus, Settings as SettingsIcon } from "lucide-react";
+import {
+  LogOut,
+  Sun,
+  Moon,
+  HardDrive,
+  Plus,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { authClient } from "../lib/auth-client";
 import { useTheme } from "../hooks/useTheme";
 import { useCreateNote } from "../hooks/useNotes";
@@ -15,7 +22,8 @@ export function SettingsPage() {
 
   const handleNewNote = async () => {
     const resData = await createNote.mutateAsync(undefined as any);
-    const newNote = resData?.[0];
+    // createNote now returns a single Note (local-first)
+    const newNote = resData as { id: string } | null | undefined;
     if (newNote) {
       navigate(`/notes/${newNote.id}`);
     }

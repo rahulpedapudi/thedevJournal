@@ -65,12 +65,14 @@ export function JournalWorkspace() {
   const [localProjectId, setLocalProjectId] = useState("");
   const [aiView, setAiView] = useState<"notion" | "raw" | "polished">("notion");
 
-  const isTypingRef = useRef(false);
+  const currentNoteIdRef = useRef<string | null>(null);
 
   // ── Sync local state when active note changes ────────────────────────────
   useEffect(() => {
     if (activeNote && noteId) {
-      if (!isTypingRef.current) {
+      const isNoteSwitch = currentNoteIdRef.current !== noteId;
+      if (isNoteSwitch) {
+        currentNoteIdRef.current = noteId;
         setLocalTitle(activeNote.title ?? "");
         setLocalRawContent(activeNote.rawContent ?? "");
       }
@@ -80,6 +82,7 @@ export function JournalWorkspace() {
         setAiView("notion");
       }
     } else if (!noteId) {
+      currentNoteIdRef.current = null;
       setLocalTitle("");
       setLocalRawContent("");
       setLocalNoteType("note");
@@ -94,16 +97,8 @@ export function JournalWorkspace() {
     const hasTitleDiff = localTitle !== (activeNote.title ?? "");
     if (!hasTitleDiff) return;
 
-    isTypingRef.current = true;
     const timer = setTimeout(() => {
-      updateNote.mutate(
-        { title: localTitle },
-        {
-          onSettled: () => {
-            isTypingRef.current = false;
-          },
-        },
-      );
+      updateNote.mutate({ title: localTitle });
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -115,7 +110,6 @@ export function JournalWorkspace() {
     const hasContentDiff = localRawContent !== (activeNote.rawContent ?? "");
     if (!hasContentDiff) return;
 
-    isTypingRef.current = true;
     const timer = setTimeout(() => {
       const dmp = new diff_match_patch();
       const patches = dmp.patch_make(
@@ -124,14 +118,7 @@ export function JournalWorkspace() {
       );
       const patchStr = dmp.patch_toText(patches);
 
-      diffPatch.mutate(
-        { patchStr, baseRevision: activeNote.revision },
-        {
-          onSettled: () => {
-            isTypingRef.current = false;
-          },
-        },
-      );
+      diffPatch.mutate({ patchStr, baseRevision: activeNote.revision });
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -143,8 +130,9 @@ export function JournalWorkspace() {
     noteType?: string;
   }) => {
     const resData = await createNote.mutateAsync(undefined as any);
-    const newNote = resData?.[0];
-    if (!newNote) return;
+    const created = Array.isArray(resData) ? resData[0] : resData;
+    const newNote = created as { id: string } | null | undefined;
+    if (!newNote || !newNote.id) return;
 
     const targetProjectId = options?.projectId || projectId || null;
     const patchBody: Record<string, any> = {};
@@ -277,7 +265,7 @@ export function JournalWorkspace() {
                 }}
               />
             ) : (
-              <Plus size={13} />
+              <Plus size={12} />
             )}
             <span>New Note</span>
           </button>
@@ -320,20 +308,6 @@ export function JournalWorkspace() {
             title="LLM & Key Settings"
           >
             <Settings size={15} />
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-            title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun size={15} className="text-amber-400" />
-            ) : (
-              <Moon size={15} />
-            )}
           </button>
 
           {/* Sign Out Button */}

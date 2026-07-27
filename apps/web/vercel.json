@@ -1,10 +1,6 @@
 {
     "rewrites": [
         {
-            "source": "/api/:path*",
-            "destination": "https://thedevjournal.onrender.com/api/:path*"
-        },
-        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

@@ -41,7 +41,6 @@ export function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const { data: session } = authClient.useSession();
-  const { resolvedTheme, toggleTheme } = useTheme();
 
   const notesForList = filteredNotes ?? notes;
 
@@ -163,25 +162,14 @@ export function Sidebar({
                 {session.user.email}
               </span>
             </div>
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Connected" />
+            <div
+              className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"
+              title="Connected"
+            />
           </div>
         )}
 
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex-1 h-7.5 inline-flex items-center justify-center gap-1.5 px-2 rounded text-[11px] font-medium bg-transparent text-text-secondary border border-border-subtle hover:text-text-primary hover:bg-bg-elevated transition-all cursor-pointer"
-            title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun size={12} className="text-amber-400" />
-            ) : (
-              <Moon size={12} className="text-slate-400" />
-            )}
-            <span>{resolvedTheme === "dark" ? "Light" : "Dark"}</span>
-          </button>
-
           <button
             onClick={onSignOut}
             className="h-7.5 inline-flex items-center justify-center gap-1 px-2.5 rounded text-[11px] font-medium bg-transparent text-text-secondary border border-border-subtle hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all cursor-pointer"

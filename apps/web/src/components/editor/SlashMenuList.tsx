@@ -18,6 +18,8 @@ import {
   Bold,
   Italic,
   Code,
+  Table as TableIcon,
+  Link as LinkIcon,
 } from "lucide-react";
 
 export interface SlashItem {
@@ -29,6 +31,37 @@ export interface SlashItem {
 }
 
 export const SLASH_ITEMS: SlashItem[] = [
+  {
+    title: "Table",
+    description: "Insert a 3x3 grid table",
+    searchTerms: ["table", "grid", "row", "column", "cell"],
+    icon: TableIcon,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run();
+    },
+  },
+  {
+    title: "Link",
+    description: "Add a hyperlink to selected text",
+    searchTerms: ["link", "url", "href", "hyperlink"],
+    icon: LinkIcon,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      const previousUrl = editor.getAttributes("link").href;
+      const url = window.prompt("URL", previousUrl);
+      if (url === null) return;
+      if (url === "") {
+        editor.chain().focus().extendMarkRange("link").unsetLink().run();
+        return;
+      }
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    },
+  },
   {
     title: "Heading 1",
     description: "Big section title",
