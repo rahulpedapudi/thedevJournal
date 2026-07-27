@@ -1,9 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LogOut, Plus, Sun, Moon, LayoutDashboard, Trash2 } from "lucide-react";
+import { LogOut, Plus, LayoutDashboard, Trash2 } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
 import type { Project } from "../../hooks/useProjects";
 import type { DevNote } from "../../hooks/useNotes";
-import { useTheme } from "../../hooks/useTheme";
 import { ProjectList } from "./ProjectList";
 import { NoteList } from "./NoteList";
 

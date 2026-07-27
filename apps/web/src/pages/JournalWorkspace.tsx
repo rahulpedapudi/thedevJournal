@@ -6,8 +6,6 @@ import {
   ChevronRight,
   HardDrive,
   LogOut,
-  Sun,
-  Moon,
   ArrowLeft,
   Plus,
   Settings,
@@ -15,7 +13,6 @@ import {
 } from "lucide-react";
 import { authClient } from "../lib/auth-client";
 import { apiFetch } from "../lib/api";
-import { useTheme } from "../hooks/useTheme";
 import {
   useNotes,
   useTrashNotes,
@@ -37,7 +34,6 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 export function JournalWorkspace() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { resolvedTheme, toggleTheme } = useTheme();
   const { noteId, projectId } = useParams<{
     noteId?: string;
     projectId?: string;
