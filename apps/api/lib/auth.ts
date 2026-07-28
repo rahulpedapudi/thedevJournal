@@ -31,6 +31,18 @@ export const auth = betterAuth({
         }
       : {}),
   },
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+    useSecureCookies: true,
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      partitioned: true,
+    },
+  },
   trustedOrigins: [
     "http://localhost:5173",
     "http://localhost:3000",
