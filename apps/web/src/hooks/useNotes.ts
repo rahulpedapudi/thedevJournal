@@ -34,6 +34,11 @@ export type ApplyPatchPayload = {
   baseRevision: number;
 };
 
+export type SearchResultNote = DevNote & {
+  rank?: number;
+  headline?: string;
+};
+
 // ---------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------
@@ -177,5 +182,33 @@ export function usePolishNote(noteId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["note", noteId] });
     },
+  });
+}
+
+/** Search notes using full-text search backend endpoint /api/search */
+export function useSearchNotes(
+  query: string,
+  options?: { projectId?: string; status?: string; limit?: number },
+) {
+  const trimmed = query.trim();
+  return useQuery<SearchResultNote[]>({
+    queryKey: [
+      "search",
+      trimmed,
+      options?.projectId,
+      options?.status,
+      options?.limit,
+    ],
+    queryFn: async () => {
+      if (!trimmed || trimmed.length < 2) return [];
+      const params = new URLSearchParams({ q: trimmed });
+      if (options?.projectId) params.append("projectId", options.projectId);
+      if (options?.status) params.append("status", options.status);
+      if (options?.limit) params.append("limit", options.limit.toString());
+
+      const res = await apiFetch(`/api/search?${params.toString()}`);
+      return res.results?.data ?? res.data ?? [];
+    },
+    enabled: trimmed.length >= 2,
   });
 }

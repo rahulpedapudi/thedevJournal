@@ -9,7 +9,11 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import type { DevNote } from "../../hooks/useNotes";
+import {
+  type DevNote,
+  type SearchResultNote,
+  useSearchNotes,
+} from "../../hooks/useNotes";
 import type { Project } from "../../hooks/useProjects";
 import { LoadingSpinner } from "../LoadingSpinner";
 
@@ -104,15 +108,25 @@ export function DriveDashboard({
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
 
+  // ── Full-text Search (via API search route) ─────────────────────────────
+  const isSearchActive = searchQuery.trim().length >= 2;
+  const { data: searchResults = [], isLoading: isSearchLoading } =
+    useSearchNotes(searchQuery, {
+      projectId: activeProjectId,
+    });
+
   const activeProject = useMemo(
     () => projects.find((p) => p.id === activeProjectId),
     [projects, activeProjectId],
   );
 
   // ── Filtering Logic ──────────────────────────────────────────────────────
+  const baseNotes = isSearchActive ? searchResults : notes;
+
   const filteredNotes = useMemo(() => {
-    return notes.filter((note) => {
-      if (searchQuery.trim()) {
+    return baseNotes.filter((note) => {
+      // Fallback client-side substring check if query length is 1
+      if (searchQuery.trim() && !isSearchActive) {
         const query = searchQuery.toLowerCase();
         const titleMatch = note.title?.toLowerCase().includes(query);
         const contentMatch = note.rawContent?.toLowerCase().includes(query);
@@ -147,7 +161,14 @@ export function DriveDashboard({
 
       return true;
     });
-  }, [notes, searchQuery, activeProjectId, statusFilter, typeFilter]);
+  }, [
+    baseNotes,
+    searchQuery,
+    isSearchActive,
+    activeProjectId,
+    statusFilter,
+    typeFilter,
+  ]);
 
   const handleCreateProjectSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,16 +283,20 @@ export function DriveDashboard({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search dev notes..."
-            className="w-full h-8 pl-8 pr-7 text-xs bg-bg-primary border border-border-subtle rounded-md text-text-primary placeholder:text-text-muted outline-none focus:border-border-strong transition-colors font-sans"
+            className="w-full h-8 pl-8 pr-8 text-xs bg-bg-primary border border-border-subtle rounded-md text-text-primary placeholder:text-text-muted outline-none focus:border-border-strong transition-colors font-sans"
           />
-          {searchQuery && (
+          {isSearchLoading ? (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+              <LoadingSpinner className="w-3 h-3" />
+            </div>
+          ) : searchQuery ? (
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary cursor-pointer"
             >
               <X size={12} />
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* Filter Pills */}
@@ -444,9 +469,18 @@ export function DriveDashboard({
                     <h3 className="text-sm font-bold text-text-primary group-hover:text-white transition-colors truncate font-sans tracking-tight">
                       {note.title || "Untitled Note"}
                     </h3>
-                    <p className="text-xs text-text-muted line-clamp-3 font-sans leading-relaxed">
-                      {cleanSnippet(note.rawContent)}
-                    </p>
+                    {(note as SearchResultNote).headline ? (
+                      <p
+                        className="text-xs text-text-secondary line-clamp-3 leading-relaxed [&>mark]:bg-amber-500/30 [&>mark]:text-amber-300 [&>mark]:px-1 [&>mark]:py-0.5 [&>mark]:rounded-xs font-mono"
+                        dangerouslySetInnerHTML={{
+                          __html: (note as SearchResultNote).headline!,
+                        }}
+                      />
+                    ) : (
+                      <p className="text-xs text-text-muted line-clamp-3 font-sans leading-relaxed">
+                        {cleanSnippet(note.rawContent)}
+                      </p>
+                    )}
                   </div>
 
                   {/* Card Footer: Project Tag & Date */}
@@ -509,9 +543,18 @@ export function DriveDashboard({
                           <span className="font-semibold text-text-primary group-hover:text-white transition-colors truncate font-sans">
                             {note.title || "Untitled Note"}
                           </span>
-                          <span className="text-[11px] text-text-muted line-clamp-1 font-sans">
-                            {cleanSnippet(note.rawContent)}
-                          </span>
+                          {(note as SearchResultNote).headline ? (
+                            <span
+                              className="text-[11px] text-text-secondary line-clamp-1 [&>mark]:bg-amber-500/30 [&>mark]:text-amber-300 [&>mark]:px-1 [&>mark]:rounded-xs font-mono"
+                              dangerouslySetInnerHTML={{
+                                __html: (note as SearchResultNote).headline!,
+                              }}
+                            />
+                          ) : (
+                            <span className="text-[11px] text-text-muted line-clamp-1 font-sans">
+                              {cleanSnippet(note.rawContent)}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 px-3.5 font-mono text-[11px] text-text-secondary truncate">
