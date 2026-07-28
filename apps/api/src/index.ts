@@ -32,6 +32,8 @@ app.use(
       "http://localhost:5173",
       "https://thedevjournal.onrender.com",
       "https://the-dev-journal-five.vercel.app",
+      "https://api.thedevjournal.xyz",
+      "https://app.thedevjournal.xyz",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
