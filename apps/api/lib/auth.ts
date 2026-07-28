@@ -2,7 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../src/db/db";
 
-const baseURL = process.env.BETTER_AUTH_URL?.trim() || "http://localhost:3000";
+const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+const isProd = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
@@ -33,14 +34,16 @@ export const auth = betterAuth({
   },
   advanced: {
     crossSubDomainCookies: {
-      enabled: false,
+      enabled: isProd,
+      domain: ".thedevjournal.xyz",
     },
-    useSecureCookies: true,
+
+    useSecureCookies: isProd,
+
     defaultCookieAttributes: {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      partitioned: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
     },
   },
   trustedOrigins: [
@@ -48,5 +51,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
     "https://thedevjournal.onrender.com",
     "https://the-dev-journal-five.vercel.app",
+    "https://api.thedevjournal.xyz",
+    "https://app.thedevjournal.xyz",
   ],
 });
