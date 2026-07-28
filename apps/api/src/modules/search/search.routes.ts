@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requiresAuth } from "../../middleware/require-auth";
 import { searchController } from "./search.controller";
 
-const searchRouter = Router();
+export const searchRouter = Router();
 searchRouter.use(requiresAuth);
 
-searchRouter.get("/search", searchController);
+searchRouter.get("/", searchController);

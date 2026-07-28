@@ -15,6 +15,7 @@ import { projectRoutes } from "./modules/projects/project.routes";
 import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
 import { userkeysRoutes } from "./modules/userkeys/userkeys.routes";
 import { settingsRoutes } from "./modules/settings/settings.routes";
+import { searchRouter } from "./modules/search/search.routes";
 
 const PORT = 3000;
 
@@ -68,6 +69,8 @@ app.use("/api/keys", userkeysRoutes);
 
 // user settings routes
 app.use("/api/settings", settingsRoutes);
+
+app.use("/api/search", searchRouter);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({

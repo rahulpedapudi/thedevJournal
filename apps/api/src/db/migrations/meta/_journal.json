@@ -29,6 +29,13 @@
       "when": 1785044574477,
       "tag": "0003_worthless_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785255138135,
+      "tag": "0004_lovely_zombie",
+      "breakpoints": true
     }
   ]
 }

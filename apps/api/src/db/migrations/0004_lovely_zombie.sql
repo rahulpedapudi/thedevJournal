@@ -1,0 +1,3 @@
+ALTER TABLE "dev_note" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(raw_content, '') || ' ' || coalesce(enriched_content, ''))) STORED;--> statement-breakpoint
+CREATE INDEX "notes_search_idx" ON "dev_note" USING gin ("search_vector");--> statement-breakpoint
+CREATE INDEX "notes_user_idx" ON "dev_note" USING btree ("user_id");

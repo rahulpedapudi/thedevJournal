@@ -7,17 +7,17 @@ export async function searchService(userId: string, reqQuery: SearchSchema) {
   const { q, limit, projectId, status } = reqQuery;
 
   if (!q || typeof q !== "string" || q.trim().length < 2) {
-    return { results: [], total: 0 };
+    return { data: [], total: 0 };
   }
 
   const query = q.trim();
+  const limitNum = limit ? parseInt(limit as string, 10) : 50;
 
   // Build filters
   const filters = [eq(devNote.userId, userId), eq(devNote.isDeleted, false)];
 
   if (projectId) filters.push(eq(devNote.projectId, projectId));
-
-  //   if (status) filters.push(eq(devNote., status));
+  if (status) filters.push(eq(devNote.aiStatus, status as any));
 
   const results = await db
     .select({
@@ -54,8 +54,10 @@ export async function searchService(userId: string, reqQuery: SearchSchema) {
         sql`${devNote.searchVector} @@ websearch_to_tsquery('english', ${query})`,
       ),
     )
-    .orderBy(sql`rank DESC`)
-    .limit(parseInt(limit as string, 10));
+    .orderBy(
+      sql`ts_rank(${devNote.searchVector}, websearch_to_tsquery('english', ${query})) DESC`,
+    )
+    .limit(limitNum);
 
   return {
     data: results,
