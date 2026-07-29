@@ -18,6 +18,7 @@ export async function getUserDevNotes(userId: string) {
       // not including enrichedContent cuz its not needed in the home page
       enrichedContent: false,
     },
+    orderBy: (note, { desc }) => [desc(note.updatedAt), desc(note.createdAt)],
   });
   return notes;
 }
