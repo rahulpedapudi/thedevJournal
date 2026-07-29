@@ -1,6 +1,6 @@
 import type { DevNote } from "../../hooks/useNotes";
 import type { Project } from "../../hooks/useProjects";
-import { Folder, Tag, Sparkles, FileText, Code2 } from "lucide-react";
+import { Folder, Tag, Sparkles, FileText, Code2, Bot } from "lucide-react";
 
 const NOTE_TYPES = [
   "note",
@@ -22,9 +22,11 @@ interface NoteEditorMetaProps {
   localNoteType: string;
   localProjectId: string;
   aiView: EditorViewMode;
+  isAgentOpen?: boolean;
   onTypeChange: (type: string) => void;
   onProjectChange: (projectId: string) => void;
   onViewChange: (view: EditorViewMode) => void;
+  onToggleAgent?: () => void;
 }
 
 /**
@@ -36,9 +38,11 @@ export function NoteEditorMeta({
   localNoteType,
   localProjectId,
   aiView,
+  isAgentOpen = false,
   onTypeChange,
   onProjectChange,
   onViewChange,
+  onToggleAgent,
 }: NoteEditorMetaProps) {
   const isPolished = activeNote.aiStatus === "completed" && activeNote.enrichedContent;
   const isProcessing = activeNote.aiStatus === "processing";
@@ -112,50 +116,74 @@ export function NoteEditorMeta({
         </span>
       </div>
 
-      {/* View Mode Segmented Controls */}
-      <div className="flex items-center bg-bg-primary border border-border-subtle rounded p-0.5 self-start sm:self-auto font-mono text-[11px]">
-        <button
-          onClick={() => onViewChange("notion")}
-          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
-            aiView === "notion"
-              ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
-              : "text-text-muted hover:text-text-primary"
-          }`}
-          title="Visual Editor"
-        >
-          <FileText size={12} />
-          <span>Editor</span>
-        </button>
+      {/* Right Controls: View Mode & Agent Assistant Toggle */}
+      <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Agent Panel Toggle Button */}
+        {onToggleAgent && (
+          <button
+            type="button"
+            onClick={onToggleAgent}
+            className={`h-7 px-2.5 rounded inline-flex items-center gap-1.5 font-mono text-[11px] font-medium transition-all cursor-pointer border ${
+              isAgentOpen
+                ? "bg-accent/15 text-accent border-accent/40 shadow-xs"
+                : "bg-bg-surface text-text-muted hover:text-text-primary border-border-subtle hover:border-border-strong"
+            }`}
+            title="Toggle Agent Chat Sidebar"
+          >
+            <Bot size={13} className={isAgentOpen ? "text-accent" : ""} />
+            <span>Agent Chat</span>
+            {isAgentOpen && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </button>
+        )}
 
-        <button
-          onClick={() => onViewChange("raw")}
-          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
-            aiView === "raw"
-              ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
-              : "text-text-muted hover:text-text-primary"
-          }`}
-          title="Raw Markdown Scratchpad"
-        >
-          <Code2 size={12} />
-          <span>Raw</span>
-        </button>
+        {/* View Mode Segmented Controls */}
+        <div className="flex items-center bg-bg-primary border border-border-subtle rounded p-0.5 font-mono text-[11px]">
+          <button
+            onClick={() => onViewChange("notion")}
+            className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
+              aiView === "notion"
+                ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
+                : "text-text-muted hover:text-text-primary"
+            }`}
+            title="Visual Editor"
+          >
+            <FileText size={12} />
+            <span>Editor</span>
+          </button>
 
-        <button
-          onClick={() => {
-            if (activeNote.enrichedContent) onViewChange("polished");
-          }}
-          disabled={!activeNote.enrichedContent}
-          className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all ${
-            aiView === "polished"
-              ? "bg-bg-elevated text-emerald-400 font-semibold border border-border-strong"
-              : "text-text-muted hover:text-text-primary"
-          } ${!activeNote.enrichedContent ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
-          title={!activeNote.enrichedContent ? "Polish note with AI first" : "Polished Article"}
-        >
-          <Sparkles size={12} className={isPolished ? "text-emerald-400" : ""} />
-          <span>Polished</span>
-        </button>
+          <button
+            onClick={() => onViewChange("raw")}
+            className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all cursor-pointer ${
+              aiView === "raw"
+                ? "bg-bg-elevated text-text-primary font-semibold border border-border-strong"
+                : "text-text-muted hover:text-text-primary"
+            }`}
+            title="Raw Markdown Scratchpad"
+          >
+            <Code2 size={12} />
+            <span>Raw</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (activeNote.enrichedContent) onViewChange("polished");
+            }}
+            disabled={!activeNote.enrichedContent}
+            className={`h-6 px-2.5 rounded inline-flex items-center gap-1 transition-all ${
+              aiView === "polished"
+                ? "bg-bg-elevated text-emerald-400 font-semibold border border-border-strong"
+                : "text-text-muted hover:text-text-primary"
+            } ${!activeNote.enrichedContent ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+            title={!activeNote.enrichedContent ? "Polish note with AI first" : "Polished Article"}
+          >
+            <Sparkles size={12} className={isPolished ? "text-emerald-400" : ""} />
+            <span>Polished</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+

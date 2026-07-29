@@ -82,20 +82,57 @@
   box-sizing: inherit;
 }
 
-/* Custom Minimal Scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* ── Premium Custom Scrollbar ─────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(63, 63, 70, 0.6) transparent;
 }
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
 ::-webkit-scrollbar-track {
   background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #27272a;
   border-radius: 9999px;
 }
+
+::-webkit-scrollbar-thumb {
+  background: rgba(63, 63, 70, 0.5);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: rgba(99, 102, 114, 0.85);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.25);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(59, 130, 246, 0.55);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Light mode scrollbar */
+:root.light ::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.45);
+}
+
+:root.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.75);
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
+}
+
+:root.light ::-webkit-scrollbar-thumb:active {
+  background: rgba(37, 99, 235, 0.45);
+}
+
+:root.light * {
+  scrollbar-color: rgba(161, 161, 170, 0.45) transparent;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -425,8 +462,8 @@
 .ProseMirror code {
   font-family: var(--font-mono);
   background-color: #18181b;
-  color: #f4f4f5;
   border: 1px solid #27272a;
+  color: #f4f4f5;
   padding: 2px 5px;
   border-radius: 4px;
   font-size: 13px;

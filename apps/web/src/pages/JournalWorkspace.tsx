@@ -2,20 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { diff_match_patch } from "diff-match-patch";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronRight,
-  HardDrive,
-  LogOut,
-  ArrowLeft,
-  Plus,
-  Settings,
-  Trash2,
-} from "lucide-react";
-import { authClient } from "../lib/auth-client";
+import { ChevronRight, HardDrive } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import {
   useNotes,
-  useTrashNotes,
   useActiveNote,
   useCreateNote,
   useUpdateNote,
@@ -27,6 +17,7 @@ import { useProjects, useCreateProject } from "../hooks/useProjects";
 import { NoteEditor } from "../components/editor/NoteEditor";
 import { DriveDashboard } from "../components/dashboard/Dashboard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { FloatingActionBar } from "../components/navigation/FloatingActionBar";
 
 /**
  * JournalWorkspace — Full-width top navbar architecture (No Sidebar).
@@ -42,7 +33,6 @@ export function JournalWorkspace() {
   // ── Server state ────────────────────────────────────────────────────────
   const { data: projects = [] } = useProjects();
   const { data: notes = [], isLoading: notesLoading } = useNotes();
-  const { data: trashNotes = [] } = useTrashNotes();
   const { data: activeNote, isLoading: loadingActiveNote } =
     useActiveNote(noteId);
 
@@ -60,6 +50,7 @@ export function JournalWorkspace() {
   const [localNoteType, setLocalNoteType] = useState<string>("note");
   const [localProjectId, setLocalProjectId] = useState("");
   const [aiView, setAiView] = useState<"notion" | "raw" | "polished">("notion");
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
 
   const currentNoteIdRef = useRef<string | null>(null);
 
@@ -176,21 +167,15 @@ export function JournalWorkspace() {
     });
   };
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    queryClient.clear();
-    navigate("/login");
-  };
-
   const currentProjectName = projectId
     ? projects.find((p) => p.id === projectId)?.name
     : null;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col w-full min-h-screen bg-bg-primary text-text-primary">
+    <div className="flex flex-col w-full h-screen max-h-screen bg-bg-primary text-text-primary overflow-hidden">
       {/* ── Global Desktop & Mobile Top Navigation Header (No Sidebar) ─────────────── */}
-      <header className="sticky top-0 z-1000 h-13 px-4 md:px-8 bg-bg-surface/90 backdrop-blur-md border-b border-border-subtle flex items-center justify-between select-none">
+      <header className="sticky top-0 z-1000 h-13 px-4 md:px-8 bg-bg-surface/90 backdrop-blur-md border-b border-border-subtle flex items-center justify-between select-none shrink-0">
         {/* Left: Brand Mark & Breadcrumbs */}
         <div className="flex items-center gap-3 overflow-hidden">
           <div
@@ -246,28 +231,9 @@ export function JournalWorkspace() {
           </div>
         </div>
 
-        {/* Right: Actions, Auto-save & User Menu */}
+        {/* Right: Auto-save Sync Status */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => handleNewNote()}
-            disabled={createNote.isPending}
-            className="h-7 px-2.5 inline-flex items-center justify-center gap-1 rounded text-xs font-mono font-medium bg-text-primary text-bg-surface hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-          >
-            {createNote.isPending ? (
-              <LoadingSpinner
-                style={{
-                  borderColor: "rgba(0,0,0,0.2)",
-                  borderLeftColor: "#000",
-                }}
-              />
-            ) : (
-              <Plus size={12} />
-            )}
-            <span>New Note</span>
-          </button>
-
-          {/* Sync Status */}
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-text-muted px-2 py-1 rounded bg-bg-primary border border-border-subtle/60">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-text-muted px-2 py-1 rounded bg-bg-primary border border-border-subtle/60">
             {updateNote.isPending || diffPatch.isPending ? (
               <span className="flex items-center gap-1 text-amber-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -280,103 +246,64 @@ export function JournalWorkspace() {
               </span>
             )}
           </div>
-
-          {/* Recently Deleted / Trash Button */}
-          <button
-            type="button"
-            onClick={() => navigate("/trash")}
-            className="p-1.5 rounded text-text-muted hover:text-amber-400 hover:bg-bg-elevated transition-colors cursor-pointer relative"
-            title="Trash"
-          >
-            <Trash2 size={15} />
-            {trashNotes.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-3.5 h-3.5 px-1 bg-amber-500 text-black text-[9px] font-mono font-bold rounded-full flex items-center justify-center">
-                {trashNotes.length}
-              </span>
-            )}
-          </button>
-
-          {/* Settings Button */}
-          <button
-            type="button"
-            onClick={() => navigate("/settings")}
-            className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-            title="LLM & Key Settings"
-          >
-            <Settings size={15} />
-          </button>
-
-          {/* Sign Out Button */}
-          <button
-            onClick={handleSignOut}
-            className="h-7 px-2.5 inline-flex items-center gap-1 rounded text-xs font-mono font-medium text-text-muted hover:text-red-400 hover:bg-red-500/10 border border-border-subtle transition-all cursor-pointer"
-            title="Sign Out"
-          >
-            <LogOut size={12} />
-            <span className="hidden md:inline">Exit</span>
-          </button>
         </div>
       </header>
 
       {/* ── Main Workspace Body ────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="w-full max-w-6xl mx-auto flex flex-col h-full">
-          {!noteId ? (
-            <DriveDashboard
-              notes={notes}
-              projects={projects}
-              notesLoading={notesLoading}
-              activeProjectId={projectId}
-              onCreateNote={handleNewNote}
-              onCreateProject={(name) => createProject.mutate(name)}
-              onDeleteNote={(id) => deleteNote.mutate(id)}
-              onPolishNote={(id) => polishNote.mutate(id)}
-              isCreatingNote={createNote.isPending}
-            />
-          ) : loadingActiveNote || !activeNote ? (
-            <div className="flex justify-center p-16">
-              <LoadingSpinner />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {/* Back to Workspace button when viewing a note */}
-              <div className="flex items-center justify-between pb-2">
-                <button
-                  onClick={() =>
-                    navigate(projectId ? `/projects/${projectId}` : "/")
-                  }
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary cursor-pointer transition-colors"
-                >
-                  <ArrowLeft size={13} />
-                  <span>
-                    Back to{" "}
-                    {currentProjectName ? currentProjectName : "Workspace"}
-                  </span>
-                </button>
-              </div>
-
-              <NoteEditor
-                activeNote={activeNote}
+      <main className="flex-1 flex overflow-hidden min-h-0 relative w-full">
+        {!noteId ? (
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 w-full">
+            <div className="w-full max-w-7xl mx-auto flex flex-col h-full">
+              <DriveDashboard
+                notes={notes}
                 projects={projects}
-                localTitle={localTitle}
-                localRawContent={localRawContent}
-                localNoteType={localNoteType}
-                localProjectId={localProjectId}
-                aiView={aiView}
-                isPolishing={polishNote.isPending}
-                isDeleting={deleteNote.isPending}
-                onTitleChange={setLocalTitle}
-                onContentChange={setLocalRawContent}
-                onTypeChange={handleTypeChange}
-                onProjectChange={handleProjectChange}
-                onViewChange={setAiView}
-                onPolish={handlePolish}
-                onDelete={handleDelete}
+                notesLoading={notesLoading}
+                activeProjectId={projectId}
+                onCreateNote={handleNewNote}
+                onCreateProject={(name) => createProject.mutate(name)}
+                onDeleteNote={(id) => deleteNote.mutate(id)}
+                onPolishNote={(id) => polishNote.mutate(id)}
+                isCreatingNote={createNote.isPending}
               />
             </div>
-          )}
-        </div>
+          </div>
+        ) : loadingActiveNote || !activeNote ? (
+          <div className="flex justify-center items-center flex-1 p-16">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <NoteEditor
+            activeNote={activeNote}
+            projects={projects}
+            localTitle={localTitle}
+            localRawContent={localRawContent}
+            localNoteType={localNoteType}
+            localProjectId={localProjectId}
+            aiView={aiView}
+            isPolishing={polishNote.isPending}
+            isDeleting={deleteNote.isPending}
+            isAgentOpen={isAgentOpen}
+            onToggleAgent={() => setIsAgentOpen((prev) => !prev)}
+            onTitleChange={setLocalTitle}
+            onContentChange={setLocalRawContent}
+            onTypeChange={handleTypeChange}
+            onProjectChange={handleProjectChange}
+            onViewChange={setAiView}
+            onPolish={handlePolish}
+            onDelete={handleDelete}
+          />
+        )}
       </main>
+
+      {/* ── Floating Action Bar ──────────────────────────────────────────── */}
+      <FloatingActionBar
+        onNewNote={handleNewNote}
+        isCreatingNote={createNote.isPending}
+        onPolishNote={activeNote ? handlePolish : undefined}
+        isPolishing={polishNote.isPending}
+        activeNoteId={activeNote?.id}
+        isAgentOpen={isAgentOpen}
+      />
     </div>
   );
 }

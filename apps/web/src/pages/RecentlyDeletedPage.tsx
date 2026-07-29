@@ -13,9 +13,6 @@ import {
   Folder,
   Calendar,
   Sparkles,
-  Sun,
-  Moon,
-  LogOut,
   HardDrive,
   CheckCircle2,
 } from "lucide-react";
@@ -27,16 +24,12 @@ import {
   type DevNote,
 } from "../hooks/useNotes";
 import { useProjects } from "../hooks/useProjects";
-import { useTheme } from "../hooks/useTheme";
-import { authClient } from "../lib/auth-client";
-import { useQueryClient } from "@tanstack/react-query";
 import { parseMarkdown } from "../lib/markdown";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { FloatingActionBar } from "../components/navigation/FloatingActionBar";
 
 export function RecentlyDeletedPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { resolvedTheme, toggleTheme } = useTheme();
 
   // ── Queries & Mutations ──────────────────────────────────────────────────
   const { data: trashNotes = [], isLoading: isTrashLoading } = useTrashNotes();
@@ -130,12 +123,6 @@ export function RecentlyDeletedPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    queryClient.clear();
-    navigate("/login");
-  };
-
   return (
     <div className="flex flex-col w-full min-h-screen bg-bg-primary text-text-primary">
       {/* ── Global Header Navigation ───────────────────────────────────────── */}
@@ -173,30 +160,8 @@ export function RecentlyDeletedPage() {
           </div>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-            title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun size={15} className="text-amber-400" />
-            ) : (
-              <Moon size={15} />
-            )}
-          </button>
-
-          <button
-            onClick={handleSignOut}
-            className="h-7 px-2.5 inline-flex items-center gap-1 rounded text-xs font-mono font-medium text-text-muted hover:text-red-400 hover:bg-red-500/10 border border-border-subtle transition-all cursor-pointer"
-            title="Sign Out"
-          >
-            <LogOut size={12} />
-            <span className="hidden md:inline">Exit</span>
-          </button>
-        </div>
+        {/* Right side clean space reserved for breadcrumbs-only header */}
+        <div className="shrink-0" />
       </header>
 
       {/* ── Main Trash Workspace Body ──────────────────────────────────────── */}
@@ -700,6 +665,9 @@ export function RecentlyDeletedPage() {
           </div>
         </div>
       )}
+
+      {/* ── Floating Action Bar ──────────────────────────────────────────── */}
+      <FloatingActionBar />
     </div>
   );
 }
