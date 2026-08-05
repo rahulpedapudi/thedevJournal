@@ -18,6 +18,7 @@ import { parseMarkdown } from "../../lib/markdown";
 import {
   useConversationMessages,
   useConversations,
+  type MessagesResponse,
 } from "../../hooks/useConversation";
 
 export interface ChatMessage {
@@ -67,7 +68,7 @@ export function AgentChatPanel({
   useEffect(() => {
     if (isNoteMode && activeNote && !messagesLoading) {
       setMessages(
-        conversationMessages.map((msg) => ({
+        conversationMessages.map((msg: MessagesResponse) => ({
           id: msg.id,
           sender: msg.role,
           content: msg.content,

@@ -109,20 +109,26 @@ export function NotionEditor({
 
                 if (rows.length === 0) return;
 
-                const colCount = rows.reduce((m, r) => Math.max(m, r.length), 0);
+                const colCount = rows.reduce(
+                  (m, r) => Math.max(m, r.length),
+                  0,
+                );
 
                 // Header row (first row)
                 state.write(
                   `| ${rows[0].map((c) => c || " ").join(" | ")} |\n`,
                 );
                 // Separator
-                state.write(
-                  `| ${Array(colCount).fill("---").join(" | ")} |\n`,
-                );
+                state.write(`| ${Array(colCount).fill("---").join(" | ")} |\n`);
                 // Body rows
                 rows.slice(1).forEach((r) => {
-                  const padded = Array.from({ length: colCount }, (_, i) => r[i] ?? "");
-                  state.write(`| ${padded.map((c) => c || " ").join(" | ")} |\n`);
+                  const padded = Array.from(
+                    { length: colCount },
+                    (_, i) => r[i] ?? "",
+                  );
+                  state.write(
+                    `| ${padded.map((c) => c || " ").join(" | ")} |\n`,
+                  );
                 });
 
                 state.closeBlock(node);
@@ -166,7 +172,8 @@ export function NotionEditor({
     if (content === lastEmittedMarkdownRef.current) return;
     if (isUpdatingRef.current) return;
 
-    const currentMarkdown = (editor.storage as any).markdown?.getMarkdown() ?? "";
+    const currentMarkdown =
+      (editor.storage as any).markdown?.getMarkdown() ?? "";
     if (currentMarkdown !== content) {
       lastEmittedMarkdownRef.current = content;
       editor.commands.setContent(content);
@@ -251,7 +258,10 @@ export function NotionEditor({
                 </button>
               </EditorTooltip>
 
-              <EditorTooltip content={editor.isActive("link") ? "Edit Link" : "Add Link"} shortcut="Ctrl+K">
+              <EditorTooltip
+                content={editor.isActive("link") ? "Edit Link" : "Add Link"}
+                shortcut="Ctrl+K"
+              >
                 <button
                   type="button"
                   onClick={addLink}
@@ -272,7 +282,9 @@ export function NotionEditor({
                   onClick={() =>
                     editor.chain().focus().toggleHeading({ level: 1 }).run()
                   }
-                  className={getBtnClass(editor.isActive("heading", { level: 1 }))}
+                  className={getBtnClass(
+                    editor.isActive("heading", { level: 1 }),
+                  )}
                 >
                   <Heading1 size={14} />
                 </button>
@@ -284,7 +296,9 @@ export function NotionEditor({
                   onClick={() =>
                     editor.chain().focus().toggleHeading({ level: 2 }).run()
                   }
-                  className={getBtnClass(editor.isActive("heading", { level: 2 }))}
+                  className={getBtnClass(
+                    editor.isActive("heading", { level: 2 }),
+                  )}
                 >
                   <Heading2 size={14} />
                 </button>
@@ -296,7 +310,9 @@ export function NotionEditor({
                   onClick={() =>
                     editor.chain().focus().toggleHeading({ level: 3 }).run()
                   }
-                  className={getBtnClass(editor.isActive("heading", { level: 3 }))}
+                  className={getBtnClass(
+                    editor.isActive("heading", { level: 3 }),
+                  )}
                 >
                   <Heading3 size={14} />
                 </button>
@@ -310,7 +326,9 @@ export function NotionEditor({
               <EditorTooltip content="Bullet List" shortcut="- Space">
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleBulletList().run()
+                  }
                   className={getBtnClass(editor.isActive("bulletList"))}
                 >
                   <List size={14} />
@@ -320,7 +338,9 @@ export function NotionEditor({
               <EditorTooltip content="Numbered List" shortcut="1. Space">
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleOrderedList().run()
+                  }
                   className={getBtnClass(editor.isActive("orderedList"))}
                 >
                   <ListOrdered size={14} />
@@ -340,7 +360,9 @@ export function NotionEditor({
               <EditorTooltip content="Quote" shortcut="> Space">
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleBlockquote().run()
+                  }
                   className={getBtnClass(editor.isActive("blockquote"))}
                 >
                   <Quote size={14} />
@@ -376,7 +398,9 @@ export function NotionEditor({
               <EditorTooltip content="Divider Line" shortcut="---">
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                  onClick={() =>
+                    editor.chain().focus().setHorizontalRule().run()
+                  }
                   className="inline-flex items-center justify-center w-7 h-7 rounded border border-transparent text-text-secondary hover:bg-bg-elevated hover:text-text-primary cursor-pointer transition-colors"
                 >
                   <Minus size={14} />
