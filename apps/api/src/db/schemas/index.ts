@@ -4,3 +4,5 @@ export * from "./devnote-schema";
 export * from "./userkeys-schema";
 export * from "./usersettings-schema";
 export * from "./entryrevision-schema";
+export * from "./conversation-schema";
+export * from "./message-schema";

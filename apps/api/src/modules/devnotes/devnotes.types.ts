@@ -5,6 +5,17 @@ export type DevNoteParams = {
 export type CreateDevNoteBody = {
   title: string;
   rawContent: string;
+  projectId?: string;
+  noteType?:
+    | "learning"
+    | "problem"
+    | "solution"
+    | "idea"
+    | "decision"
+    | "experiment"
+    | "question"
+    | "progress"
+    | "note";
 };
 
 export type PatchNoteBody = {

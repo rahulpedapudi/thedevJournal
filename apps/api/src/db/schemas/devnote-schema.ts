@@ -11,6 +11,7 @@ import { sql } from "drizzle-orm";
 
 import { user } from "./auth-schema";
 import { project } from "./project-schema";
+import { conversations } from "./conversation-schema";
 
 const tsvector = customType<{ data: string }>({
   dataType() {
@@ -32,6 +33,10 @@ export const devNote = pgTable(
       }),
 
     projectId: text("project_id").references(() => project.id, {
+      onDelete: "set null",
+    }),
+
+    conversationId: text("conversation_id").references(() => conversations.id, {
       onDelete: "set null",
     }),
 

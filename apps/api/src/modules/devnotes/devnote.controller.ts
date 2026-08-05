@@ -19,7 +19,6 @@ import type {
 
 import { logger } from "../../../lib/logger";
 
-
 export async function getDevNotes(req: Request, res: Response): Promise<void> {
   const userId = req.user?.id as string;
   try {
@@ -105,11 +104,17 @@ export async function createDevNote(
   req: Request<{}, {}, CreateDevNoteBody>,
   res: Response,
 ) {
-  const { title, rawContent } = req.body;
+  const { title, rawContent, noteType, projectId } = req.body;
   const userId = req.user!.id;
 
   try {
-    const note = await createUserDevNote(userId, title, rawContent);
+    const note = await createUserDevNote(
+      userId,
+      title,
+      rawContent,
+      projectId,
+      noteType,
+    );
 
     logger.info(
       { userId, noteId: note?.[0]?.id, title },

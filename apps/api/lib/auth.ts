@@ -38,6 +38,8 @@ export const auth = betterAuth({
       domain: ".thedevjournal.xyz",
     },
 
+    disableOriginCheck: true,
+
     useSecureCookies: isProd,
 
     defaultCookieAttributes: {

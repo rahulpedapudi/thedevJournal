@@ -16,6 +16,8 @@ import { devNoteRoutes } from "./modules/devnotes/devnote.routes";
 import { userkeysRoutes } from "./modules/userkeys/userkeys.routes";
 import { settingsRoutes } from "./modules/settings/settings.routes";
 import { searchRouter } from "./modules/search/search.routes";
+import { chatRouter } from "./modules/chat/chat.routes";
+import { conversationRouter } from "./modules/conversation/conversation.routes";
 
 const PORT = 3000;
 
@@ -71,6 +73,10 @@ app.use("/api/keys", userkeysRoutes);
 app.use("/api/settings", settingsRoutes);
 
 app.use("/api/search", searchRouter);
+
+app.use("/api/conversation", conversationRouter);
+
+app.use("/api/chat", chatRouter);
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({

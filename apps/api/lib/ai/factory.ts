@@ -1,6 +1,5 @@
 import { GroqProvider } from "./providers/groqProvider";
 import type { AIProvider } from "./types";
-import { getUserKeyByProvider } from "../../src/modules/userkeys/userkeys.service";
 
 export async function getProvider(
   provider: "groq" | "gemini" | "openrouter",
@@ -11,7 +10,7 @@ export async function getProvider(
       if (!apiKey) {
         throw new Error("API_KEY is not configured");
       }
-      return new GroqProvider(apiKey, "openai/gpt-oss-120b");
+      return new GroqProvider(apiKey);
 
     default:
       throw new Error(`Unsupported provider: ${provider}`);

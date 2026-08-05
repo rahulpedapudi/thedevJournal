@@ -52,6 +52,17 @@ export async function createUserDevNote(
   userId: string,
   title: string,
   rawContent: string,
+  projectId?: string,
+  noteType?:
+    | "learning"
+    | "problem"
+    | "solution"
+    | "idea"
+    | "decision"
+    | "experiment"
+    | "question"
+    | "progress"
+    | "note",
 ) {
   // ! this creates a empty note in db, which i should probably fix
   // TODO: if the note is empty then dont create it in the db.
@@ -61,6 +72,8 @@ export async function createUserDevNote(
       userId: userId,
       title: title,
       rawContent: rawContent,
+      ...(projectId && { projectId }),
+      ...(noteType && { noteType }),
     })
     .returning();
 
@@ -244,5 +257,5 @@ export async function generatePolishedContent(
     },
   ]);
 
-  return content;
+  return content.msg.content;
 }
