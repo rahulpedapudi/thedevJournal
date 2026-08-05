@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trash2,
   X,
+  Bot,
 } from "lucide-react";
 import {
   type DevNote,
@@ -27,6 +28,8 @@ interface DriveDashboardProps {
   onDeleteNote: (id: string) => void;
   onPolishNote: (id: string) => void;
   isCreatingNote?: boolean;
+  onToggleAgent?: () => void;
+  isAgentOpen?: boolean;
 }
 
 /**
@@ -95,6 +98,8 @@ export function DriveDashboard({
   onDeleteNote,
   onPolishNote,
   isCreatingNote,
+  onToggleAgent,
+  isAgentOpen,
 }: DriveDashboardProps) {
   const navigate = useNavigate();
 
@@ -205,8 +210,27 @@ export function DriveDashboard({
             )}
           </div>
           <h1 className="text-xl font-bold text-text-primary tracking-tight">
-            {activeProject ? activeProject.name : " "}
+            {activeProject ? activeProject.name : "All Notes & Projects"}
           </h1>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {onToggleAgent && (
+            <button
+              type="button"
+              onClick={onToggleAgent}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-xs border ${
+                isAgentOpen
+                  ? "bg-accent text-white border-accent shadow-accent/20"
+                  : "bg-bg-surface hover:bg-bg-elevated text-text-primary border-border-subtle hover:border-border-strong"
+              }`}
+            >
+              <Bot size={15} className={isAgentOpen ? "text-white" : "text-accent"} />
+              <span>Chat with Agent</span>
+              <Sparkles size={12} className={isAgentOpen ? "text-white/80" : "text-purple-400"} />
+            </button>
+          )}
         </div>
       </div>
 

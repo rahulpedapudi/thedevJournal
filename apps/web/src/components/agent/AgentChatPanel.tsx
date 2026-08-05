@@ -3,7 +3,6 @@ import {
   Bot,
   Send,
   Sparkles,
-  RotateCcw,
   User,
   Copy,
   Check,
@@ -14,68 +13,77 @@ import {
   Wand2,
 } from "lucide-react";
 import type { DevNote } from "../../hooks/useNotes";
+import { apiFetch } from "../../lib/api";
+import { parseMarkdown } from "../../lib/markdown";
+import {
+  useConversationMessages,
+  useConversations,
+} from "../../hooks/useConversation";
 
 export interface ChatMessage {
   id: string;
-  sender: "user" | "agent";
+  sender: "user" | "assistant";
   content: string;
   timestamp: string;
   chips?: string[];
 }
 
 interface AgentChatPanelProps {
-  activeNote: DevNote;
-  noteTitle: string;
-  noteContent: string;
+  activeNote?: DevNote | null;
+  noteTitle?: string;
+  noteContent?: string;
   isOpen: boolean;
   onClose: () => void;
+  projectId?: string;
 }
 
 export function AgentChatPanel({
   activeNote,
-  noteTitle,
-  noteContent,
+  noteTitle = "",
   isOpen,
   onClose,
+  projectId,
 }: AgentChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | undefined>(
+    activeNote?.conversationId || undefined,
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const isNoteMode = Boolean(activeNote);
+
+  const { data: conversations = [], isLoading: convLoading } =
+    useConversations();
+
+  const { data: conversationMessages = [], isLoading: messagesLoading } =
+    useConversationMessages(conversationId);
+
   // Initialize conversation with contextual welcome message if empty
   useEffect(() => {
-    if (messages.length === 0) {
-      const displayTitle = noteTitle.trim() || "Untitled Note";
-      setMessages([
-        {
-          id: "welcome-1",
-          sender: "agent",
-          content: `Hello! I'm your **DevJournal Agent**. I'm actively analyzing **"${displayTitle}"**.\n\nHow would you like me to assist you with this note today?`,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          chips: [
-            "Summarize this note",
-            "Extract action items",
-            "Generate unit tests",
-            "Improve formatting",
-          ],
-        },
-      ]);
+    if (isNoteMode && activeNote && !messagesLoading) {
+      setMessages(
+        conversationMessages.map((msg) => ({
+          id: msg.id,
+          sender: msg.role,
+          content: msg.content,
+          timestamp: msg.createdAt,
+          // chips: msg.chips,
+        })),
+      );
     }
-  }, [noteTitle]);
+  }, [conversationMessages, conversationId]);
 
   // Auto-scroll to bottom of chat when messages change or typing state changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
     if (!query || isTyping) return;
 
@@ -95,47 +103,48 @@ export function AgentChatPanel({
     if (!textToSend) setInput("");
     setIsTyping(true);
 
-    // Simulate Agent response based on note context
-    setTimeout(() => {
-      let responseText = "";
-      let responseChips: string[] | undefined;
+    try {
+      const res = await apiFetch("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          prompt: query,
+          conversationId: conversationId,
+          noteId: activeNote?.id,
+        }),
+      });
 
-      const lower = query.toLowerCase();
-      const cleanTitle = noteTitle.trim() || "Untitled Note";
-      const snippet = noteContent.trim().slice(0, 180) || "No note body text available yet.";
-
-      if (lower.includes("summarize") || lower.includes("summary")) {
-        responseText = `### 📋 Note Summary: ${cleanTitle}\n\nKey takeaways from your note:\n- **Overview**: ${snippet}\n- **Word Count**: ${
-          noteContent.trim().split(/\s+/).filter(Boolean).length
-        } words.\n- **Status**: Ready for iteration or task breakdown.`;
-        responseChips = ["Extract action items", "Suggest tags"];
-      } else if (lower.includes("action") || lower.includes("task") || lower.includes("extract")) {
-        responseText = `### 📌 Extracted Action Items:\n\nBased on **"${cleanTitle}"**, here are the recommended tasks:\n\n1. [ ] Review architectural decisions mentioned in note\n2. [ ] Implement test cases for edge scenarios\n3. [ ] Update documentation & team journal log`;
-        responseChips = ["Generate code snippet", "Summarize this note"];
-      } else if (lower.includes("test") || lower.includes("code") || lower.includes("unit")) {
-        responseText = `### ⚡ Generated Test Scaffold:\n\n\`\`\`typescript\ndescribe("${cleanTitle}", () => {\n  it("should execute core note logic properly", () => {\n    const noteData = { title: "${cleanTitle}" };\n    expect(noteData.title).toBeDefined();\n  });\n});\n\`\`\``;
-        responseChips = ["Improve formatting", "Extract action items"];
-      } else if (lower.includes("format") || lower.includes("improve") || lower.includes("tone")) {
-        responseText = `I've analyzed the prose in **"${cleanTitle}"**. Here are quick recommendations:\n- Add clear Markdown section headers (\`## Header\`)\n- Break up long paragraphs into bullet points\n- Format technical symbols and code references inside backticks (\`like this\`).`;
-      } else {
-        responseText = `I've received your query about **"${cleanTitle}"**.\n\n*Note context preview*: "${snippet}"\n\nI can help you refactor code, generate docs, outline technical architecture, or create TODO checklists!`;
-        responseChips = ["Summarize this note", "Extract action items"];
+      if (res?.conversationId) {
+        setConversationId(res.conversationId);
       }
 
       const agentMsg: ChatMessage = {
         id: `agent-${Date.now()}`,
-        sender: "agent",
-        content: responseText,
+        sender: "assistant",
+        content: res?.data || "No response content received.",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        chips: responseChips,
       };
 
       setMessages((prev) => [...prev, agentMsg]);
+    } catch (error: any) {
+      const errorMsg: ChatMessage = {
+        id: `error-${Date.now()}`,
+        sender: "assistant",
+        content: `⚠️ **API Error**: ${
+          error.message ||
+          "Failed to connect to AI agent backend. Please ensure your AI Provider Key is configured in Settings."
+        }`,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 850);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -151,62 +160,77 @@ export function AgentChatPanel({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleClearChat = () => {
-    const displayTitle = noteTitle.trim() || "Untitled Note";
-    setMessages([
-      {
-        id: `welcome-${Date.now()}`,
-        sender: "agent",
-        content: `Chat history cleared. How can I assist with **"${displayTitle}"** now?`,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        chips: [
-          "Summarize this note",
-          "Extract action items",
-          "Generate unit tests",
-        ],
-      },
-    ]);
-  };
+  // const handleClearChat = () => {
+  //   setConversationId(undefined);
+  //   if (isNoteMode && activeNote) {
+  //     const displayTitle =
+  //       noteTitle.trim() || activeNote.title || "Untitled Note";
+  //     setMessages([
+  //       {
+  //         id: `welcome-${Date.now()}`,
+  //         sender: "assistant",
+  //         content: `Chat history cleared. How can I assist with **"${displayTitle}"** now?`,
+  //         timestamp: new Date().toLocaleTimeString([], {
+  //           hour: "2-digit",
+  //           minute: "2-digit",
+  //         }),
+  //         chips: [
+  //           "Summarize this note",
+  //           "Extract action items",
+  //           "Generate unit tests",
+  //         ],
+  //       },
+  //     ]);
+  //   } else {
+  //     setMessages([
+  //       {
+  //         id: `welcome-${Date.now()}`,
+  //         sender: "assistant",
+  //         content: `Chat history cleared. How can I assist with your workspace today?`,
+  //         timestamp: new Date().toLocaleTimeString([], {
+  //           hour: "2-digit",
+  //           minute: "2-digit",
+  //         }),
+  //         chips: [
+  //           "Summarize workspace",
+  //           "Find open tasks",
+  //           "Generate code scaffold",
+  //         ],
+  //       },
+  //     ]);
+  //   }
+  // };
 
   if (!isOpen) return null;
+
+  const contextLabel = isNoteMode
+    ? activeNote?.title || noteTitle || "Untitled Note"
+    : projectId
+      ? "Project Context"
+      : "Workspace Overview";
 
   return (
     <div className="flex flex-col h-full w-full bg-bg-surface select-none min-h-0 overflow-hidden font-sans">
       {/* ── Agent Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-bg-elevated/40 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-accent to-purple-500 text-white shadow-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-accent to-purple-500 text-white shadow-xs shrink-0">
             <Bot size={18} />
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-bg-surface rounded-full" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-xs font-bold text-text-primary tracking-tight font-sans">
+              <h3 className="text-xs font-bold text-text-primary tracking-tight font-sans truncate">
                 DevJournal Agent
               </h3>
-              <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold rounded bg-accent/15 text-accent border border-accent/30">
-                AI Beta
-              </span>
             </div>
-            <p className="text-[10px] font-mono text-text-muted">
-              Context: {activeNote.title || "Untitled Note"}
+            <p className="text-[10px] font-mono text-text-muted truncate">
+              Context: {contextLabel}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={handleClearChat}
-            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer border-none bg-transparent"
-            title="Clear Chat History"
-          >
-            <RotateCcw size={14} />
-          </button>
-
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -221,7 +245,7 @@ export function AgentChatPanel({
       {/* ── Chat Messages Scroller ───────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 font-sans text-xs">
         {messages.map((msg) => {
-          const isAgent = msg.sender === "agent";
+          const isAgent = msg.sender === "assistant";
           return (
             <div
               key={msg.id}
@@ -234,11 +258,15 @@ export function AgentChatPanel({
                 {isAgent ? (
                   <>
                     <Sparkles size={11} className="text-accent" />
-                    <span className="font-semibold text-text-secondary">Agent</span>
+                    <span className="font-semibold text-text-secondary">
+                      Agent
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span className="font-semibold text-text-secondary">You</span>
+                    <span className="font-semibold text-text-secondary">
+                      You
+                    </span>
                     <User size={11} className="text-text-muted" />
                   </>
                 )}
@@ -254,10 +282,13 @@ export function AgentChatPanel({
                     : "bg-accent/15 text-text-primary border border-accent/30 rounded-tr-xs shadow-xs"
                 }`}
               >
-                {/* Format basic markdown formatting inside message */}
-                <div className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
-                  {msg.content}
-                </div>
+                {/* Render HTML parsed markdown */}
+                <div
+                  className="font-sans text-xs leading-relaxed space-y-2 [&_h1]:text-sm [&_h1]:font-bold [&_h2]:text-xs [&_h2]:font-semibold [&_h3]:text-xs [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-bg-primary/80 [&_code]:font-mono [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:bg-bg-primary [&_pre]:overflow-x-auto"
+                  dangerouslySetInnerHTML={{
+                    __html: parseMarkdown(msg.content),
+                  }}
+                />
 
                 {/* Copy Button */}
                 <button
@@ -315,41 +346,91 @@ export function AgentChatPanel({
 
       {/* ── Quick Starter Chips Bar ─────────────────────────────────────────── */}
       <div className="px-3 py-1.5 bg-bg-elevated/20 border-t border-border-subtle/60 flex items-center gap-1.5 overflow-x-auto text-[10px] font-mono no-scrollbar shrink-0">
-        <button
-          type="button"
-          onClick={() => handleSendMessage("Summarize this note")}
-          className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
-        >
-          <FileText size={10} className="text-blue-400" />
-          <span>Summary</span>
-        </button>
+        {isNoteMode ? (
+          <>
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Summarize this note")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <FileText size={10} className="text-blue-400" />
+              <span>Summary</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => handleSendMessage("Extract action items")}
-          className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
-        >
-          <ListCheck size={10} className="text-amber-400" />
-          <span>Action Items</span>
-        </button>
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Extract action items")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <ListCheck size={10} className="text-amber-400" />
+              <span>Action Items</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => handleSendMessage("Generate unit tests")}
-          className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
-        >
-          <Code2 size={10} className="text-purple-400" />
-          <span>Tests</span>
-        </button>
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Generate unit tests")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <Code2 size={10} className="text-purple-400" />
+              <span>Tests</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => handleSendMessage("Improve formatting")}
-          className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
-        >
-          <Wand2 size={10} className="text-emerald-400" />
-          <span>Refactor</span>
-        </button>
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Improve formatting")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <Wand2 size={10} className="text-emerald-400" />
+              <span>Refactor</span>
+            </button>
+          </>
+        ) : (
+          <div>
+            <h3>Recent Chats</h3>
+            {convLoading ? (
+              <p>Loading...</p>
+            ) : (
+              conversations.map((conversation) => {
+                return <p>{conversation.title}</p>;
+              })
+            )}
+            {/* <button
+              type="button"
+              onClick={() => handleSendMessage("Summarize workspace")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <FileText size={10} className="text-blue-400" />
+              <span>Workspace Summary</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSendMessage("What action items are open?")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <ListCheck size={10} className="text-amber-400" />
+              <span>Action Items</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Generate code scaffold")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <Code2 size={10} className="text-purple-400" />
+              <span>Code Scaffold</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSendMessage("Help organize projects")}
+              className="px-2 py-1 rounded-md bg-bg-elevated text-text-muted hover:text-text-primary border border-border-subtle hover:border-border-strong flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+            >
+              <FolderGit2 size={10} className="text-emerald-400" />
+              <span>Organize</span>
+            </button> */}
+          </div>
+        )}
       </div>
 
       {/* ── Chat Input Form Bar ─────────────────────────────────────────────── */}
@@ -361,7 +442,11 @@ export function AgentChatPanel({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask AI agent about this note..."
+            placeholder={
+              isNoteMode
+                ? "Ask AI agent about this note..."
+                : "Ask AI agent about workspace..."
+            }
             className="w-full bg-transparent border-none outline-none text-xs text-text-primary placeholder:text-text-muted/50 resize-none font-sans leading-relaxed"
           />
 
@@ -378,7 +463,7 @@ export function AgentChatPanel({
 
         <div className="flex items-center justify-between mt-2 text-[9px] font-mono text-text-muted/60 px-1">
           <span>Enter to send · Shift+Enter for new line</span>
-          <span>UI Agent Mode</span>
+          <span>Agent API Active</span>
         </div>
       </div>
     </div>

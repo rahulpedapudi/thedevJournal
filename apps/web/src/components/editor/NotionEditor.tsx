@@ -11,6 +11,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { Markdown } from "tiptap-markdown";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import {
   Bold,
   Italic,
@@ -73,10 +74,64 @@ export function NotionEditor({
           rel: "noopener noreferrer",
         },
       }),
+      // Extend Table to always serialize as GFM markdown (| col |),
+      // even when cells contain multiple paragraphs, instead of falling
+      // through to tiptap-markdown's broken "[table]" placeholder.
       Table.configure({
         resizable: true,
         HTMLAttributes: {
           class: "notion-table",
+        },
+      }).extend({
+        addStorage() {
+          return {
+            markdown: {
+              serialize(state: any, node: ProseMirrorNode) {
+                const rows: string[][] = [];
+                node.forEach((row) => {
+                  const cells: string[] = [];
+                  row.forEach((cell) => {
+                    // Collect text from all paragraphs in the cell,
+                    // joining multi-paragraph content with <br>
+                    const parts: string[] = [];
+                    cell.forEach((child) => {
+                      let text = "";
+                      child.forEach((inline: ProseMirrorNode) => {
+                        text += inline.text ?? "";
+                      });
+                      parts.push(text);
+                    });
+                    // Escape pipes inside cell content
+                    cells.push(parts.join("<br>").replace(/\|/g, "\\|").trim());
+                  });
+                  rows.push(cells);
+                });
+
+                if (rows.length === 0) return;
+
+                const colCount = rows.reduce((m, r) => Math.max(m, r.length), 0);
+
+                // Header row (first row)
+                state.write(
+                  `| ${rows[0].map((c) => c || " ").join(" | ")} |\n`,
+                );
+                // Separator
+                state.write(
+                  `| ${Array(colCount).fill("---").join(" | ")} |\n`,
+                );
+                // Body rows
+                rows.slice(1).forEach((r) => {
+                  const padded = Array.from({ length: colCount }, (_, i) => r[i] ?? "");
+                  state.write(`| ${padded.map((c) => c || " ").join(" | ")} |\n`);
+                });
+
+                state.closeBlock(node);
+              },
+              parse: {
+                // Handled by markdown-it's table plugin
+              },
+            },
+          };
         },
       }),
       TableRow,

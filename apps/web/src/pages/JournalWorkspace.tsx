@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { diff_match_patch } from "diff-match-patch";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, HardDrive } from "lucide-react";
 import { apiFetch } from "../lib/api";
@@ -16,6 +16,7 @@ import {
 import { useProjects, useCreateProject } from "../hooks/useProjects";
 import { NoteEditor } from "../components/editor/NoteEditor";
 import { DriveDashboard } from "../components/dashboard/Dashboard";
+import { AgentChatPanel } from "../components/agent/AgentChatPanel";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { FloatingActionBar } from "../components/navigation/FloatingActionBar";
 
@@ -51,6 +52,15 @@ export function JournalWorkspace() {
   const [localProjectId, setLocalProjectId] = useState("");
   const [aiView, setAiView] = useState<"notion" | "raw" | "polished">("notion");
   const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("chat") === "1") {
+      setIsAgentOpen(true);
+      searchParams.delete("chat");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const currentNoteIdRef = useRef<string | null>(null);
 
@@ -252,20 +262,43 @@ export function JournalWorkspace() {
       {/* ── Main Workspace Body ────────────────────────────────────────────── */}
       <main className="flex-1 flex overflow-hidden min-h-0 relative w-full">
         {!noteId ? (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 w-full">
-            <div className="w-full max-w-7xl mx-auto flex flex-col h-full">
-              <DriveDashboard
-                notes={notes}
-                projects={projects}
-                notesLoading={notesLoading}
-                activeProjectId={projectId}
-                onCreateNote={handleNewNote}
-                onCreateProject={(name) => createProject.mutate(name)}
-                onDeleteNote={(id) => deleteNote.mutate(id)}
-                onPolishNote={(id) => polishNote.mutate(id)}
-                isCreatingNote={createNote.isPending}
-              />
+          <div className="flex-1 flex overflow-hidden w-full relative min-h-0">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 w-full">
+              <div className="w-full max-w-7xl mx-auto flex flex-col h-full">
+                <DriveDashboard
+                  notes={notes}
+                  projects={projects}
+                  notesLoading={notesLoading}
+                  activeProjectId={projectId}
+                  onCreateNote={handleNewNote}
+                  onCreateProject={(name) => createProject.mutate(name)}
+                  onDeleteNote={(id) => deleteNote.mutate(id)}
+                  onPolishNote={(id) => polishNote.mutate(id)}
+                  isCreatingNote={createNote.isPending}
+                  onToggleAgent={() => setIsAgentOpen((prev) => !prev)}
+                  isAgentOpen={isAgentOpen}
+                />
+              </div>
             </div>
+
+            {/* Dashboard Agent Chat Sidebar */}
+            {isAgentOpen && (
+              <>
+                {/* Mobile Backdrop Overlay */}
+                <div
+                  onClick={() => setIsAgentOpen(false)}
+                  className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[1040] animate-in fade-in duration-200"
+                />
+
+                <div className="fixed inset-y-0 right-0 z-[1050] w-full sm:w-[380px] lg:static lg:z-auto lg:h-full lg:w-[380px] xl:w-[420px] shrink-0 border-l border-border-subtle bg-bg-surface flex flex-col min-h-0 animate-in slide-in-from-right duration-200">
+                  <AgentChatPanel
+                    isOpen={isAgentOpen}
+                    onClose={() => setIsAgentOpen(false)}
+                    projectId={projectId}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ) : loadingActiveNote || !activeNote ? (
           <div className="flex justify-center items-center flex-1 p-16">
@@ -303,6 +336,7 @@ export function JournalWorkspace() {
         isPolishing={polishNote.isPending}
         activeNoteId={activeNote?.id}
         isAgentOpen={isAgentOpen}
+        onToggleAgent={() => setIsAgentOpen((prev) => !prev)}
       />
     </div>
   );

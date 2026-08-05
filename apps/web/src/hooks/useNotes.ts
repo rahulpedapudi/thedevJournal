@@ -13,6 +13,7 @@ export type DevNote = {
   enrichedContent: string | null;
   noteType: string;
   projectId: string | null;
+  conversationId: string | null;
   aiStatus: string;
   isDeleted: boolean;
   deletedAt: string | null;
