@@ -9,6 +9,7 @@ import {
   applyDiffPatch,
   getUserTrashNotes,
   emptyTrashNotes,
+  getNoteVersionHistory,
 } from "./devnote.service";
 import type {
   CreateDevNoteBody,
@@ -256,6 +257,29 @@ export async function emptyTrashNotesController(
     });
   } catch (error) {
     logger.error({ error, userId }, "Failed to empty trash");
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
+
+export async function noteVersionHistory(
+  req: Request<DevNoteParams>,
+  res: Response,
+) {
+  try {
+    const devNoteId = req.params.id;
+    const userId = req.user!.id;
+
+    const versionHistory = await getNoteVersionHistory(userId, devNoteId);
+
+    res.status(200).json({
+      success: true,
+      data: versionHistory,
+    });
+  } catch (error) {
+    logger.error({ error }, "Failed to get note version history");
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

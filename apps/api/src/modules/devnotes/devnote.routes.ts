@@ -10,6 +10,7 @@ import {
   applyDiffPatchController,
   getTrashNotes,
   emptyTrashNotesController,
+  noteVersionHistory,
 } from "./devnote.controller";
 
 export const devNoteRoutes = Router();
@@ -19,6 +20,7 @@ devNoteRoutes.use(requiresAuth);
 devNoteRoutes.get("/", getDevNotes);
 devNoteRoutes.get("/trash", getTrashNotes);
 devNoteRoutes.get("/:id", getDevNoteByID);
+devNoteRoutes.get("/history/:id", noteVersionHistory);
 
 devNoteRoutes.post("/", createDevNote);
 devNoteRoutes.patch("/:id", patchDevNote);

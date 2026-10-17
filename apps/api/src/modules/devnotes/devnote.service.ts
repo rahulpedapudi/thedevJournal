@@ -47,6 +47,79 @@ export async function getUserDevNote(userId: string, devNoteId: string) {
   return note;
 }
 
+
+// fix the reconstruction logic
+export async function getNoteVersionHistory(userId: string, devNoteId: string) {
+  try {
+    const noteHistory = await db.query.entryRevision.findMany({
+      where: and(
+        eq(entryRevision.userId, userId),
+        eq(entryRevision.noteId, devNoteId),
+      ),
+      orderBy: (row, { asc }) => [asc(row.revision)],
+    });
+
+    let initialString = "";
+
+    const noteVersionHistory: {
+      revision: number;
+      patch: string;
+      rawContent: string;
+      createdAt: Date;
+    }[] = [];
+
+    for (const note of noteHistory) {
+      const reconstructedContent = _reconstructContent(
+        initialString,
+        note.patch!,
+      );
+
+      initialString = reconstructedContent;
+      noteVersionHistory.push({
+        revision: note.revision,
+        patch: note.patch!,
+        rawContent: _formatContent(reconstructedContent),
+        createdAt: note.createdAt,
+      });
+    }
+
+    return noteVersionHistory;
+  } catch (error) {
+    logger.error(
+      { error, userId, devNoteId },
+      "Failed to get note version history",
+    );
+    throw error;
+  }
+}
+
+function _formatContent(content: string) {
+  return (
+    content
+      // Markdown syntax
+      .replace(/\\([#*_`>~])/g, "$1")
+
+      // Common escaped characters
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      .replace(/\\\\/g, "\\")
+
+      // Remove unnecessary escaping before @, parentheses, etc.
+      .replace(/\\([@()[\]{}])/g, "$1")
+
+      .trim()
+  );
+}
+
+function _reconstructContent(initialString: string, patchStr: string): string {
+  const dmp = new diff_match_patch();
+  const patches = dmp.patch_fromText(patchStr);
+
+  const [reconstructedContent, _] = dmp.patch_apply(patches, initialString);
+
+  return reconstructedContent as string;
+}
+
 // creates a devnote with default title as "Untitled"
 export async function createUserDevNote(
   userId: string,

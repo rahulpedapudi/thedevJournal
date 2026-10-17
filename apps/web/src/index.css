@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -18,10 +18,12 @@
   --color-status-pending-text: var(--status-pending-text);
   --color-status-completed-bg: var(--status-completed-bg);
   --color-status-completed-text: var(--status-completed-text);
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Geist Mono', monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", monospace;
   --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-elevated: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 4px 12px -2px rgba(0, 0, 0, 0.6);
+  --shadow-elevated:
+    0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 4px 12px -2px rgba(0, 0, 0, 0.6);
 }
 
 :root {
@@ -34,10 +36,10 @@
   --text-muted: #71717a;
   --border-subtle: #27272a;
   --border-strong: #3f3f46;
-  
+
   --accent: #3b82f6;
   --accent-light: rgba(59, 130, 246, 0.12);
-  
+
   --status-draft-bg: #18181b;
   --status-draft-text: #a1a1aa;
   --status-pending-bg: #261704;
@@ -45,8 +47,9 @@
   --status-completed-bg: #042f2e;
   --status-completed-text: #2dd4bf;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Geist Mono', monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", monospace;
 
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -78,7 +81,9 @@
   --status-completed-text: #0f766e;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
@@ -872,7 +877,10 @@
   z-index: 2;
   position: absolute;
   content: "";
-  left: 0; right: 0; top: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   background: rgba(59, 130, 246, 0.15);
   border: 1px solid var(--accent);
   pointer-events: none;
@@ -891,4 +899,3 @@
 .ProseMirror table p {
   margin: 0;
 }
-
